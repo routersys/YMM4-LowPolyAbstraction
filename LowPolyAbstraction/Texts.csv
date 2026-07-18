@@ -1,0 +1,35 @@
+Key,Parameter,ja-jp,en-us,zh-cn,zh-tw,ko-kr,es-es,ar-sa,id-id
+LowPolyAbstraction,,ローポリ化,Low Poly Abstraction,低多边形化,低多邊形化,로우폴리화,Abstracción low poly,تجريد منخفض المضلعات,Abstraksi Low Poly
+BasicGroup,,基本,Basic,基本,基本,기본,Básico,أساسي,Dasar
+StructureGroup,,三角形,Triangles,三角形,三角形,삼각형,Triángulos,المثلثات,Segitiga
+AppearanceGroup,,描画,Appearance,绘制,繪製,묘화,Apariencia,المظهر,Tampilan
+Amount,,強さ,Amount,强度,強度,강도,Intensidad,الشدة,Intensitas
+AmountDescription,,ローポリ画の合成量です,Blend amount of the low poly image over the source,低多边形图像与源图像的混合量,低多邊形圖像與源圖像的混合量,로우폴리 이미지의 합성량입니다,Cantidad de mezcla de la imagen low poly sobre la fuente,مقدار مزج الصورة منخفضة المضلعات فوق المصدر,Jumlah pencampuran citra low poly di atas sumber
+Quality,,品質,Quality,品质,品質,품질,Calidad,الجودة,Kualitas
+QualityDescription,,作業解像度と最適化の反復回数を選びます,Selects the working resolution and optimization iteration counts,选择工作分辨率与优化迭代次数,選擇工作解析度與最佳化迭代次數,작업 해상도와 최적화 반복 횟수를 선택합니다,Selecciona la resolución de trabajo y el número de iteraciones de optimización,يحدد دقة العمل وعدد تكرارات التحسين,Memilih resolusi kerja dan jumlah iterasi optimasi
+Detail,,細かさ,Detail,细腻度,細膩度,세밀함,Detalle,التفصيل,Detail
+DetailDescription,,三角形の数です。高いほど細かく分割されます,Number of triangles. Higher values split the image more finely,三角形数量。数值越高分割越细,三角形數量。數值越高分割越細,삼각형의 수입니다. 높을수록 더 세밀하게 분할됩니다,Número de triángulos. Valores altos dividen la imagen con más detalle,عدد المثلثات. القيم الأعلى تقسم الصورة بدقة أكبر,Jumlah segitiga. Nilai tinggi membagi citra lebih halus
+Fidelity,,輪郭忠実度,Edge Fidelity,轮廓保真度,輪廓保真度,윤곽 충실도,Fidelidad de bordes,دقة الحواف,Fidelitas Tepi
+FidelityDescription,,輪郭への頂点の集まり具合です。高いほど輪郭が保たれます,Concentration of vertices along edges. Higher values preserve the contours,顶点向轮廓聚集的程度。数值越高轮廓越清晰,頂點向輪廓聚集的程度。數值越高輪廓越清晰,윤곽으로 정점이 모이는 정도입니다. 높을수록 윤곽이 유지됩니다,Concentración de vértices en los bordes. Valores altos preservan los contornos,تركيز الرؤوس على طول الحواف. القيم الأعلى تحافظ على المعالم,Konsentrasi simpul di sepanjang tepi. Nilai tinggi mempertahankan kontur
+Refine,,細分化,Refinement,细分,細分,세분화,Refinamiento,التنقيح,Penghalusan
+RefineDescription,,色の誤差が大きい三角形を分割する強さです,Strength of splitting triangles with large color error,分割颜色误差较大三角形的强度,分割顏色誤差較大三角形的強度,색 오차가 큰 삼각형을 분할하는 강도입니다,Intensidad de la subdivisión de triángulos con gran error de color,قوة تقسيم المثلثات ذات خطأ اللون الكبير,Kekuatan pemecahan segitiga dengan kesalahan warna besar
+Seed,,シード,Seed,种子,種子,시드,Semilla,البذرة,Seed
+SeedDescription,,三角形の配置を決める固定値です,A fixed value that determines the triangle layout,决定三角形布局的固定值,決定三角形佈局的固定值,삼각형 배치를 결정하는 고정값입니다,Valor fijo que determina la disposición de los triángulos,قيمة ثابتة تحدد توزيع المثلثات,Nilai tetap yang menentukan tata letak segitiga
+Gradient,,グラデーション,Gradient,渐变,漸變,그라데이션,Degradado,التدرج,Gradasi
+GradientDescription,,三角形内の塗りのグラデーションの強さです,Strength of the gradient fill inside each triangle,三角形内部渐变填充的强度,三角形內部漸變填充的強度,삼각형 내부 그라데이션 채우기의 강도입니다,Intensidad del relleno degradado dentro de cada triángulo,شدة التعبئة المتدرجة داخل كل مثلث,Kekuatan isian gradasi di dalam setiap segitiga
+Wireframe,,輪郭線,Wireframe,轮廓线,輪廓線,윤곽선,Malla,الإطار الشبكي,Rangka
+WireframeDescription,,三角形の境界線の濃さです,Darkness of the triangle boundary lines,三角形边界线的浓度,三角形邊界線的濃度,삼각형 경계선의 진하기입니다,Oscuridad de las líneas de borde de los triángulos,شدة خطوط حدود المثلثات,Ketebalan garis batas segitiga
+Saturation,,彩度,Saturation,饱和度,飽和度,채도,Saturación,التشبع,Saturasi
+SaturationDescription,,三角形の色の彩度の強調量です,Amount of saturation boost of the triangle colors,三角形颜色饱和度的增强量,三角形顏色飽和度的增強量,삼각형 색 채도의 강조량입니다,Cantidad de realce de saturación de los colores de los triángulos,مقدار تعزيز تشبع ألوان المثلثات,Jumlah peningkatan saturasi warna segitiga
+Jitter,,明度ゆらぎ,Brightness Jitter,明度扰动,明度擾動,명도 요동,Variación de brillo,تذبذب السطوع,Fluktuasi Kecerahan
+JitterDescription,,三角形ごとの明るさのゆらぎです,Per-triangle fluctuation of brightness,每个三角形的亮度扰动,每個三角形的亮度擾動,삼각형마다의 밝기 요동입니다,Fluctuación del brillo por triángulo,تذبذب السطوع لكل مثلث,Fluktuasi kecerahan per segitiga
+QualityBalanced,,標準,Balanced,标准,標準,표준,Estándar,قياسي,Standar
+QualityBalancedDescription,,作業解像度と反復回数を抑えた設定です,Uses reduced working resolution and iteration counts,降低工作分辨率与迭代次数的设置,降低工作解析度與迭代次數的設定,작업 해상도와 반복 횟수를 줄인 설정입니다,Configuración con resolución de trabajo e iteraciones reducidas,إعداد بدقة عمل وعدد تكرارات مخفضين,Pengaturan dengan resolusi kerja dan iterasi yang dikurangi
+QualityHigh,,高品質,High,高品质,高品質,고품질,Alta,عالية,Tinggi
+QualityHighDescription,,品質と処理量の基準設定です,The reference balance of quality and cost,品质与处理量的基准设置,品質與處理量的基準設定,품질과 처리량의 기준 설정입니다,Configuración de referencia entre calidad y coste,الإعداد المرجعي للتوازن بين الجودة والتكلفة,Pengaturan acuan antara kualitas dan beban proses
+QualityUltra,,最高品質,Ultra,最高品质,最高品質,최고 품질,Máxima,قصوى,Ultra
+QualityUltraDescription,,最大の作業解像度と反復回数を使用します,Uses the largest working resolution and iteration counts,使用最大的工作分辨率与迭代次数,使用最大的工作解析度與迭代次數,최대 작업 해상도와 반복 횟수를 사용합니다,Usa la mayor resolución de trabajo y el mayor número de iteraciones,يستخدم أكبر دقة عمل وأكبر عدد من التكرارات,Menggunakan resolusi kerja dan jumlah iterasi terbesar
+TagLowPoly,,ローポリ,Low Poly,低多边形,低多邊形,로우폴리,Low poly,منخفض المضلعات,Low Poly
+TagTriangle,,三角形,Triangle,三角形,三角形,삼각형,Triángulo,مثلث,Segitiga
+TagPolygon,,ポリゴン,Polygon,多边形,多邊形,폴리곤,Polígono,مضلع,Poligon
+UpdateAvailableMessage,,新しいバージョン {0} が公開されています。,A new version {0} is available.,新版本 {0} 已发布。,新版本 {0} 已發布。,새 버전 {0}이(가) 공개되었습니다.,La nueva versión {0} ya está disponible.,تم إصدار نسخة جديدة {0}.,Versi baru {0} telah dirilis.
