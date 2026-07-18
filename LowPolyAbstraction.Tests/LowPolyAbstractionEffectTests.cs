@@ -265,6 +265,42 @@ public sealed class LowPolyAbstractionEffectTests
     }
 
     [Fact]
+    public void RefinementChangesOutputOnHighVarianceSource()
+    {
+        using var pipeline = LowPolyAbstractionPipeline.TryCreate();
+        if (pipeline is null)
+        {
+            Assert.Skip("Direct3D 12 is unavailable.");
+            return;
+        }
+
+        const int width = 128;
+        const int height = 128;
+        var source = new int[width * height];
+        for (var y = 16; y < 112; y++)
+        {
+            for (var x = 16; x < 112; x++)
+            {
+                var value = (uint)(x * 73856093 ^ y * 19349663);
+                value ^= value >> 13;
+                value *= 0x85EBCA6Bu;
+                var gray = (int)(value >> 24);
+                source[y * width + x] = unchecked((int)0xFF000000) | gray << 16 | gray << 8 | gray;
+            }
+        }
+        var without = new int[source.Length];
+        var with = new int[source.Length];
+
+        var withoutParameters = CreateParameters(refine: 0f);
+        var withParameters = CreateParameters(refine: 1f);
+        pipeline.Process(source, without, width, height, in withoutParameters);
+        pipeline.Process(source, with, width, height, in withParameters);
+
+        Assert.True(CountLitPixels(without) > 0);
+        Assert.NotEqual(without, with);
+    }
+
+    [Fact]
     public void OutputStaysWithinSilhouetteBoundsWithPadding()
     {
         using var pipeline = LowPolyAbstractionPipeline.TryCreate();

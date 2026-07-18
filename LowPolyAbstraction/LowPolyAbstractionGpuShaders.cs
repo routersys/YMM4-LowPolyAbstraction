@@ -1030,7 +1030,7 @@ internal readonly partial struct TriangleColorPassShader(
             if (count > 0f)
             {
                 var meanL = ReconstructA(baseA + 10) / (count * LowPolyAbstractionSettings.ColorScale);
-                var meanL2 = ReconstructA(baseA + 12) / (count * (float)LowPolyAbstractionSettings.ColorScale * LowPolyAbstractionSettings.ColorScale);
+                var meanL2 = ReconstructA(baseA + 12) / (count * (float)LowPolyAbstractionSettings.ColorScale);
                 var variance = Hlsl.Max(meanL2 - meanL * meanL, 0f);
                 var band = trimSigmaFactor * Hlsl.Sqrt(variance) + 1f / LowPolyAbstractionSettings.ColorScale;
                 if (Hlsl.Abs(l - meanL) > band)
@@ -1102,7 +1102,7 @@ internal readonly partial struct FinalizeTrianglesShader(
         }
         var inverseScaleA = 1f / (countA * LowPolyAbstractionSettings.ColorScale);
         var meanL = ReconstructA(baseA + 10) * inverseScaleA;
-        var meanL2 = ReconstructA(baseA + 12) / (countA * (float)LowPolyAbstractionSettings.ColorScale * LowPolyAbstractionSettings.ColorScale);
+        var meanL2 = ReconstructA(baseA + 12) / (countA * (float)LowPolyAbstractionSettings.ColorScale);
         triangleErrors[triangle] = Hlsl.Max(meanL2 - meanL * meanL, 0f);
 
         var baseB = triangle * 10;
