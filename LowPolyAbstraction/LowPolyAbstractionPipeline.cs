@@ -244,7 +244,7 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
         var workingHeight = derived.WorkingHeight;
         var pixelCount = workingWidth * workingHeight;
 
-        context.For(workingWidth, workingHeight, new EdgeShader(_luma!, _color!, _edgeMagnitude!, workingWidth, workingHeight));
+        context.For(workingWidth, workingHeight, new EdgeShader(_luma!, _edgeMagnitude!, workingWidth, workingHeight));
         context.Barrier(_edgeMagnitude!);
 
         context.For(workingWidth, workingHeight, new EdgeDistanceSeedShader(
@@ -301,7 +301,7 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
         RecordLloydIterations(in context, in derived, derived.CvtIterations);
         RecordVoronoi(in context, in derived);
         RecordTriangulation(in context, in derived, pixelCount);
-        RecordTriangleColors(in context, in derived);
+        RecordTriangleColors(in context, in derived, false);
 
         for (var pass = 0; pass < derived.RefinePasses; pass++)
         {
@@ -320,7 +320,7 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
             RecordLloydIterations(in context, in derived, LowPolyAbstractionSettings.PostInsertLloydIterations);
             RecordVoronoi(in context, in derived);
             RecordTriangulation(in context, in derived, pixelCount);
-            RecordTriangleColors(in context, in derived);
+            RecordTriangleColors(in context, in derived, pass == derived.RefinePasses - 1);
         }
 
         var siteColorLength = _siteCapacity * 10;
@@ -389,30 +389,38 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
             _triangleVertices!, _incidenceCounts!, _incidence!, _scratch, derived.TriangleCapacity));
         context.Barrier(_incidenceCounts!);
         context.Barrier(_incidence!);
+        context.For(_siteCapacity, new SortIncidenceShader(_incidenceCounts!, _incidence!, _siteCapacity));
+        context.Barrier(_incidence!);
     }
 
-    private void RecordTriangleColors(in ComputeContext context, in DerivedValues derived)
+    private void RecordTriangleColors(in ComputeContext context, in DerivedValues derived, bool computeColors)
     {
         var lengthA = derived.TriangleCapacity * 14;
-        var lengthB = derived.TriangleCapacity * 10;
         context.For(lengthA, new FillIntShader(_triangleAccumulatorsA!, lengthA, 0));
         context.Barrier(_triangleAccumulatorsA!);
+        context.For(derived.WorkingWidth, derived.WorkingHeight, new TriangleMapShader(
+            _assignment!, _color!, _sitePositions!, _triangleVertices!, _incidenceCounts!, _incidence!, _counts!,
+            derived.WorkingWidth, derived.WorkingHeight, LowPolyAbstractionSettings.AlphaThreshold));
+        context.Barrier(_counts!);
         context.For(derived.WorkingWidth, derived.WorkingHeight, new TriangleColorPassShader(
-            _assignment!, _color!, _sitePositions!, _triangleVertices!, _incidenceCounts!, _incidence!, _scratch,
-            _triangleAccumulatorsA!, _triangleAccumulatorsB!, derived.WorkingWidth, derived.WorkingHeight,
-            0, LowPolyAbstractionSettings.TrimSigmaFactor, LowPolyAbstractionSettings.AlphaThreshold));
+            _counts!, _color!, _triangleAccumulatorsA!, _triangleAccumulatorsB!,
+            derived.WorkingWidth, derived.WorkingHeight, 0, LowPolyAbstractionSettings.TrimSigmaFactor));
         context.Barrier(_triangleAccumulatorsA!);
-        context.For(lengthB, new FillIntShader(_triangleAccumulatorsB!, lengthB, 0));
-        context.Barrier(_triangleAccumulatorsB!);
-        context.For(derived.WorkingWidth, derived.WorkingHeight, new TriangleColorPassShader(
-            _assignment!, _color!, _sitePositions!, _triangleVertices!, _incidenceCounts!, _incidence!, _scratch,
-            _triangleAccumulatorsA!, _triangleAccumulatorsB!, derived.WorkingWidth, derived.WorkingHeight,
-            1, LowPolyAbstractionSettings.TrimSigmaFactor, LowPolyAbstractionSettings.AlphaThreshold));
-        context.Barrier(_triangleAccumulatorsB!);
+        if (computeColors)
+        {
+            var lengthB = derived.TriangleCapacity * 10;
+            context.For(lengthB, new FillIntShader(_triangleAccumulatorsB!, lengthB, 0));
+            context.Barrier(_triangleAccumulatorsB!);
+            context.For(derived.WorkingWidth, derived.WorkingHeight, new TriangleColorPassShader(
+                _counts!, _color!, _triangleAccumulatorsA!, _triangleAccumulatorsB!,
+                derived.WorkingWidth, derived.WorkingHeight, 1, LowPolyAbstractionSettings.TrimSigmaFactor));
+            context.Barrier(_triangleAccumulatorsB!);
+        }
         context.For(derived.TriangleCapacity, new FinalizeTrianglesShader(
             _triangleAccumulatorsA!, _triangleAccumulatorsB!, _scratch, _triangleColors!, _triangleErrors!,
-            derived.TriangleCapacity));
-        context.Barrier(_triangleColors!);
+            derived.TriangleCapacity, computeColors ? 1 : 0));
+        if (computeColors)
+            context.Barrier(_triangleColors!);
         context.Barrier(_triangleErrors!);
     }
 
