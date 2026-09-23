@@ -1,0 +1,163 @@
+{
+  "adapter": "Intel(R) Iris(R) Xe Graphics",
+  "driver": "32.0.101.7085",
+  "input": "synthetic 640x480 89838D8976198E40",
+  "canvas": "1280x720",
+  "cases": [
+    {
+      "name": "default",
+      "frames": [
+        0
+      ],
+      "hash": "B753BAA7C6E2FEE08B47ABA15568EAA73B02A83107C41FF53590E697E51C92FC"
+    },
+    {
+      "name": "default-frames-0-8",
+      "frames": [
+        0,
+        1,
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8
+      ],
+      "hash": "88083B3886AD0DE8DF2D920A2470F53BC17F3962E3CF83AD9C0FF52B192DC98E"
+    },
+    {
+      "name": "amount-0",
+      "frames": [
+        0
+      ],
+      "hash": "0A700F76CEDDBAD7C4B6A2C19D46939C1A93940E86C6EFEF1E5A53DB48D2A020"
+    },
+    {
+      "name": "amount-50",
+      "frames": [
+        0
+      ],
+      "hash": "57074FE3D9D759E0C4475D1D4497577846352EDA14CE661143CDBE1F00E6C3EE"
+    },
+    {
+      "name": "quality-balanced",
+      "frames": [
+        0
+      ],
+      "hash": "F7A0E4DCE4ADB36F9A874DAEE919B60B61CC47F60BC6B3631D4DBC38C90F9972"
+    },
+    {
+      "name": "quality-ultra",
+      "frames": [
+        0
+      ],
+      "hash": "6B725A3E976A88287888CBFC44D982314605A949C4D362FB3A1E305B56E8C94B"
+    },
+    {
+      "name": "detail-0",
+      "frames": [
+        0
+      ],
+      "hash": "3E65D2D3013AC6D508E4484A049FAD1CD45CB6CA8E4A797B1B4CBCE6055E203D"
+    },
+    {
+      "name": "detail-100",
+      "frames": [
+        0
+      ],
+      "hash": "E62745CBAF22F65BC1644C3217BDCF85524441CB6CFD52D078A3EC43B29C74D9"
+    },
+    {
+      "name": "fidelity-0",
+      "frames": [
+        0
+      ],
+      "hash": "6F40D84CD6330D69C23A9D40BEF822C90AEC13C1A2F3EF75493100AEF0532997"
+    },
+    {
+      "name": "fidelity-100",
+      "frames": [
+        0
+      ],
+      "hash": "3557D31758B07EC6E2EB1B5EDB3A9443596EA5A38FC7809ACE99CE0D6E4176C6"
+    },
+    {
+      "name": "refine-0",
+      "frames": [
+        0
+      ],
+      "hash": "206BE90BE68372FE912360E18B58663334E33E6D1712990FB7439F9F23AF1F30"
+    },
+    {
+      "name": "refine-100",
+      "frames": [
+        0
+      ],
+      "hash": "D95E7AAE2DE2A532661F8ED57A20D7DDFE03B95A775B58671F3E10A2138CD6F8"
+    },
+    {
+      "name": "seed-42",
+      "frames": [
+        0
+      ],
+      "hash": "0049AC7F5AD8E9AB02A1DFC95E5A398DAFD82D8E9C6B5B8508BEA1C743E70335"
+    },
+    {
+      "name": "gradient-0",
+      "frames": [
+        0
+      ],
+      "hash": "89E9AD35CCFAE6441C1056A7F2A085A9AB153130E5FFB76EFE68F8C663CE9F23"
+    },
+    {
+      "name": "gradient-100",
+      "frames": [
+        0
+      ],
+      "hash": "EA9BD416C31BE25EEEB4203D7943414697004A7F66D55CFF77CEE84F9A428725"
+    },
+    {
+      "name": "wireframe-50",
+      "frames": [
+        0
+      ],
+      "hash": "C3C0486E0F212368B8CC3AED3466B1E721079E8F74EBEA76DFEE046B1C5667BB"
+    },
+    {
+      "name": "wireframe-100",
+      "frames": [
+        0
+      ],
+      "hash": "4EB9ACEBFB4637BC3EC0A50E04232BC4322A60C8EDF451B193E61C68FE42C245"
+    },
+    {
+      "name": "saturation-0",
+      "frames": [
+        0
+      ],
+      "hash": "773F4ABF4B643F4E26973AC9568838825E1790F7C6AC96FDBFAE6CEB4CAB03B2"
+    },
+    {
+      "name": "saturation-100",
+      "frames": [
+        0
+      ],
+      "hash": "05D50239AD06FFD14C52947FC50BA9B455D048FCB76093FD746B06B19FAF6613"
+    },
+    {
+      "name": "jitter-0",
+      "frames": [
+        0
+      ],
+      "hash": "386FB0A4E31719352D85161C97C2FC54D5CF5E713A80316339E1936D6CD4F6EE"
+    },
+    {
+      "name": "jitter-100",
+      "frames": [
+        0
+      ],
+      "hash": "3507DFDDA3343612EAEAF43C34F484D607A11AC99FF820C18531C7BF819173EE"
+    }
+  ]
+}
