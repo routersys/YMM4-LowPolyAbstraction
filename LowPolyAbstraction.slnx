@@ -5,8 +5,13 @@
   </Configurations>
   <Project Path="LowPolyAbstraction/LowPolyAbstraction.csproj">
     <Platform Solution="*|x64" Project="x64" />
+    <BuildDependency Project="LowPolyAbstraction.Shader/LowPolyAbstraction.Shader.vcxproj" />
   </Project>
   <Project Path="LowPolyAbstraction.Tests/LowPolyAbstraction.Tests.csproj" />
   <Project Path="LowPolyAbstraction.Harness/LowPolyAbstraction.Harness.csproj" />
+  <Project Path="LowPolyAbstraction.Shader/LowPolyAbstraction.Shader.vcxproj">
+    <BuildType Solution="*|*" Project="Release" />
+    <Platform Solution="*|*" Project="Win32" />
+  </Project>
   <Project Path="YukkuriMovieMaker.Generator/YukkuriMovieMaker.Generator/YukkuriMovieMaker.Generator.csproj" />
 </Solution>
