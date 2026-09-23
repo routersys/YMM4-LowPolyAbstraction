@@ -1,5 +1,5 @@
 using System.Diagnostics;
-using ComputeSharp;
+using ComputeWeave;
 using LowPolyAbstraction;
 
 var width = 1280;

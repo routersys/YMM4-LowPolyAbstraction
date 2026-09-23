@@ -26,6 +26,4 @@
     </Reference>
   </ItemGroup>
 
-  <Import Project="..\LowPolyAbstraction\ComputeSharp.Reference.props" />
-
 </Project>
