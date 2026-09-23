@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Runtime.InteropServices;
 using ComputeWeave;
 
@@ -49,13 +50,18 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
         try
         {
             host = LowPolyAbstractionPipelineHost.Create(device, LowPolyAbstractionSettings.MaximumPendingSubmissions);
-            return new LowPolyAbstractionPipeline(device, host);
+            var pipeline = new LowPolyAbstractionPipeline(device, host);
+            host = null;
+            return pipeline;
         }
-        catch
+        catch (Win32Exception)
+        {
+            return null;
+        }
+        finally
         {
             host?.Dispose();
             host?.WaitForDisposal();
-            return null;
         }
     }
 

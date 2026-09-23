@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Numerics;
 using ComputeWeave;
 using Vortice.Direct2D1;
@@ -283,10 +284,15 @@ internal sealed class LowPolyAbstractionEffectProcessor : VideoEffectProcessorBa
             _resourceSet = LowPolyAbstractionResourceSet.Create(interopDevice, _interopDomain);
             _pipeline = LowPolyAbstractionPipeline.TryCreate(interopDevice);
         }
-        catch
+        catch (Win32Exception)
         {
             ReleaseInterop();
             return null;
+        }
+        catch
+        {
+            ReleaseInterop();
+            throw;
         }
 
         if (_pipeline is null)
