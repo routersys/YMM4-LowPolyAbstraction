@@ -573,6 +573,51 @@ public sealed class LowPolyAbstractionEffectTests
         Assert.True(CountLitOutput(graphicsContext.DeviceContext, outputLease, visible) > 0);
     }
 
+    [Fact]
+    public void Direct2DInteropProducesTrianglesAfterReplacingSource()
+    {
+        using var devices = new GraphicsDevices();
+        using var graphicsContext = devices.CreateContext();
+        using var scheduler = ComputeExternalQueueScheduler.Create();
+        using var provider = LowPolyAbstractionInteropProvider.TryCreate(graphicsContext, scheduler, out var interopDevice);
+        if (provider is null || interopDevice is null)
+        {
+            Assert.Skip("Direct3D 11 and Direct3D 12 sharing is unavailable.");
+            return;
+        }
+
+        using var domain = interopDevice.RegisterExternalDomain(provider);
+        using var resourceSet = LowPolyAbstractionResourceSet.Create(interopDevice, domain);
+        using var pipeline = LowPolyAbstractionPipeline.TryCreate(interopDevice);
+        Assert.NotNull(pipeline);
+
+        var parameters = CreateParameters();
+        var previousVisible = default(LowPolyAbstractionPipeline.PixelRect);
+        var previousArea = 0;
+        foreach (var (size, square) in new[] { (96, 32), (128, 64) })
+        {
+            using var inputBitmap = CreateInputBitmap(graphicsContext.DeviceContext, CreateTwoToneSource(size, size, (size - square) / 2, (size - square) / 2, square, square), size, size);
+            Assert.True(resourceSet.TryEnsureSource(size, size, out var sourceChanged));
+            Assert.True(sourceChanged);
+            DrawSource(resourceSet, provider.RenderContext, inputBitmap);
+
+            Assert.True(pipeline!.Simulate(
+                resourceSet.GetSourceComputeBinding(), size, size, 0, 0, size, size, in parameters));
+            Assert.True(pipeline.TryGetVisibleBounds(size, size, in parameters, out var visible));
+            Assert.True(visible.Width > previousVisible.Width && visible.Height > previousVisible.Height);
+            Assert.True(resourceSet.TryEnsureOutput(visible.Width, visible.Height, out _));
+            pipeline.RenderVisible(
+                resourceSet.GetOutputComputeBinding(), size, size, visible, in parameters);
+
+            using var outputLease = resourceSet.AcquireOutputExternalViewLease();
+            Assert.Equal(visible.Width, outputLease.Width);
+            Assert.Equal(visible.Height, outputLease.Height);
+            Assert.True(CountLitOutput(graphicsContext.DeviceContext, outputLease, visible) > previousArea);
+            previousVisible = visible;
+            previousArea = square * square;
+        }
+    }
+
     private static ID2D1Bitmap1 CreateInputBitmap(ID2D1DeviceContext6 deviceContext, int[] pixels, int width, int height)
     {
         var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
