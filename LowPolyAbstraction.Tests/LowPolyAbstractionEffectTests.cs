@@ -1,7 +1,6 @@
 using System.Runtime.InteropServices;
 using ComputeWeave;
 using ComputeWeave.Interop;
-using Vortice;
 using Vortice.Direct2D1;
 using Vortice.DXGI;
 using Vortice.Mathematics;
