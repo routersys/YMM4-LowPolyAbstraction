@@ -31,8 +31,10 @@ internal static class LowPolyAbstractionUpdateNotifier
             };
             await new Notifier(Owner, Repository, options).NotifyAsync().ConfigureAwait(false);
         }
-        catch
+        catch (Exception exception)
         {
+            if (exception is not UpdateCheckException)
+                LowPolyAbstractionTelemetry.Report(exception);
         }
     }
 
