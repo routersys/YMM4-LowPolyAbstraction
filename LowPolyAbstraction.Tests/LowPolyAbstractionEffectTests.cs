@@ -524,21 +524,47 @@ public sealed class LowPolyAbstractionEffectTests
     {
         using var devices = new GraphicsDevices();
         using var graphicsContext = devices.CreateContext();
-        using var interop = LowPolyAbstractionGpuInterop.TryCreate(graphicsContext);
-        if (interop is null)
+        using var scheduler = ComputeExternalQueueScheduler.Create();
+        using var provider = LowPolyAbstractionInteropProvider.TryCreate(graphicsContext, scheduler, out var interopDevice);
+        if (provider is null || interopDevice is null)
         {
             Assert.Skip("Direct3D 11 and Direct3D 12 sharing is unavailable.");
             return;
         }
 
-        using var pipeline = LowPolyAbstractionPipeline.TryCreate(interop.Device);
+        using var domain = interopDevice.RegisterExternalDomain(provider);
+        using var resourceSet = LowPolyAbstractionResourceSet.Create(interopDevice, domain);
+        using var pipeline = LowPolyAbstractionPipeline.TryCreate(interopDevice);
         Assert.NotNull(pipeline);
 
         const int width = 96;
         const int height = 96;
-        var pixels = CreateTwoToneSource(width, height, 24, 24, 48, 48);
+        using var inputBitmap = CreateInputBitmap(graphicsContext.DeviceContext, CreateTwoToneSource(width, height, 24, 24, 48, 48), width, height);
+
+        Assert.True(resourceSet.TryEnsureSource(width, height, out _));
+        var parameters = CreateParameters();
+        LowPolyAbstractionPipeline.PixelRect visible = default;
+        for (var iteration = 0; iteration < 2; iteration++)
+        {
+            DrawSource(resourceSet, provider.RenderContext, inputBitmap);
+            pipeline!.Simulate(
+                resourceSet.GetSourceComputeBinding(), width, height, 0, 0, width, height, in parameters);
+            Assert.True(pipeline.TryGetVisibleBounds(width, height, in parameters, out visible));
+            Assert.True(resourceSet.TryEnsureOutput(visible.Width, visible.Height, out _));
+            pipeline.RenderVisible(
+                resourceSet.GetOutputComputeBinding(), width, height, visible, in parameters);
+        }
+
+        using var outputLease = resourceSet.AcquireOutputExternalViewLease();
+        Assert.Equal(visible.Width, outputLease.Width);
+        Assert.Equal(visible.Height, outputLease.Height);
+        Assert.True(CountLitOutput(graphicsContext.DeviceContext, outputLease, visible) > 0);
+    }
+
+    private static ID2D1Bitmap1 CreateInputBitmap(ID2D1DeviceContext6 deviceContext, int[] pixels, int width, int height)
+    {
         var handle = GCHandle.Alloc(pixels, GCHandleType.Pinned);
-        using var inputBitmap = graphicsContext.DeviceContext.CreateBitmap(
+        var inputBitmap = deviceContext.CreateBitmap(
             new SizeI(width, height),
             new BitmapProperties1(
                 new PixelFormat(Format.B8G8R8A8_UNorm, Vortice.DCommon.AlphaMode.Premultiplied),
@@ -553,40 +579,45 @@ public sealed class LowPolyAbstractionEffectTests
         {
             handle.Free();
         }
+        return inputBitmap;
+    }
 
-        Assert.True(interop.EnsureResources(width, height));
-        var bounds = new RawRectF(0f, 0f, width, height);
-        var parameters = CreateParameters();
-        for (var iteration = 0; iteration < 2; iteration++)
-        {
-            interop.RenderInput(inputBitmap, bounds);
-            interop.BeginCompute();
-            try
-            {
-                pipeline!.Process(interop.SourceTexture, interop.OutputTexture, width, height, in parameters);
-            }
-            finally
-            {
-                interop.EndCompute();
-            }
-        }
-        interop.WaitForIdle();
+    private static void DrawSource(LowPolyAbstractionResourceSet resourceSet, ID2D1DeviceContext6 renderContext, ID2D1Bitmap1 inputBitmap)
+    {
+        using var borrow = resourceSet.BeginSourceExternalOperation();
+        var previousTarget = renderContext.Target;
+        using var sourceBitmap = new ID2D1Bitmap1(borrow.DangerousGetView().AddRefBitmap());
+        renderContext.Target = sourceBitmap;
+        renderContext.BeginDraw();
+        renderContext.Clear(null);
+        renderContext.DrawImage(
+            inputBitmap,
+            new System.Numerics.Vector2(0f, 0f),
+            null,
+            InterpolationMode.NearestNeighbor,
+            CompositeMode.SourceCopy);
+        renderContext.EndDraw();
+        renderContext.Target = previousTarget;
+    }
 
-        using var staging = graphicsContext.DeviceContext.CreateBitmap(
-            new SizeI(width, height),
+    private static int CountLitOutput(ID2D1DeviceContext6 deviceContext, ExternalTextureLease<ExternalDirect3D11TextureView> outputLease, LowPolyAbstractionPipeline.PixelRect visible)
+    {
+        using var staging = deviceContext.CreateBitmap(
+            new SizeI(visible.Width, visible.Height),
             new BitmapProperties1(
                 new PixelFormat(Format.B8G8R8A8_UNorm, Vortice.DCommon.AlphaMode.Premultiplied),
                 96f,
                 96f,
                 BitmapOptions.CpuRead | BitmapOptions.CannotDraw));
-        staging.CopyFromBitmap(interop.OutputBitmap);
+        using var outputBitmap = new ID2D1Bitmap1(outputLease.DangerousGetView().AddRefBitmap());
+        staging.CopyFromBitmap(Vortice.Mathematics.Int2.Zero, outputBitmap, new RectI(0, 0, visible.Width, visible.Height));
         var mapped = staging.Map(MapOptions.Read);
         try
         {
             var lit = 0;
-            for (var y = 0; y < height; y++)
+            for (var y = 0; y < visible.Height; y++)
             {
-                for (var x = 0; x < width; x++)
+                for (var x = 0; x < visible.Width; x++)
                 {
                     var actual = Marshal.ReadInt32(mapped.Bits + (nint)(y * mapped.Pitch + x * sizeof(int)));
                     var alpha = (actual >> 24) & 255;
@@ -597,7 +628,7 @@ public sealed class LowPolyAbstractionEffectTests
                         lit++;
                 }
             }
-            Assert.True(lit > 0);
+            return lit;
         }
         finally
         {

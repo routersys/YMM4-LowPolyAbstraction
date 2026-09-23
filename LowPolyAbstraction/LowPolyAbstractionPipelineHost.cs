@@ -118,6 +118,39 @@ internal sealed partial class LowPolyAbstractionPipelineHost
     }
 
     [ComputePipeline]
+    [ComputeInterop]
+    private void RecordSharedAnalyze(
+        in ComputeContext context,
+        [ComputeOwnedResource(nameof(_grid))] LowPolyAbstractionGridResources grid,
+        [ComputeResource(ComputeResourceAccess.ReadWrite, Sharing = ComputeResourceSharing.External)] ReadWriteTexture2D<Bgra32, Float4> source,
+        [ComputeResource(ComputeResourceAccess.ReadWrite)] ReadWriteBuffer<int> scratch,
+        int sourceOffsetX,
+        int sourceOffsetY,
+        int sourceWidth,
+        int sourceHeight,
+        in LowPolyAbstractionPipeline.DerivedValues derived)
+    {
+        _ = _device;
+
+        RecordAnalyzeStage(in context, grid, source, scratch, sourceOffsetX, sourceOffsetY, sourceWidth, sourceHeight, in derived);
+    }
+
+    [ComputePipeline]
+    [ComputeInterop]
+    private void RecordSharedRender(
+        in ComputeContext context,
+        [ComputeOwnedResource(nameof(_grid))] LowPolyAbstractionGridResources grid,
+        [ComputeResource(ComputeResourceAccess.ReadWrite, Sharing = ComputeResourceSharing.External)] ReadWriteTexture2D<Bgra32, Float4> output,
+        in LowPolyAbstractionPipeline.PixelRect rect,
+        in LowPolyAbstractionPipeline.DerivedValues derived,
+        in LowPolyAbstractionPipeline.Parameters parameters)
+    {
+        _ = _device;
+
+        RecordRenderStage(in context, grid, output, rect, in derived, in parameters);
+    }
+
+    [ComputePipeline]
     private void RecordStructure(
         in ComputeContext context,
         [ComputeOwnedResource(nameof(_grid))] LowPolyAbstractionGridResources grid,
