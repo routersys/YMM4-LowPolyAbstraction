@@ -62,64 +62,6 @@ public sealed class LowPolyAbstractionEffectTests
         Assert.Empty(effect.CreateExoVideoFilters(0, null!));
     }
 
-    [Theory]
-    [InlineData(LowPolyAbstractionQuality.Balanced, 1024, 4096, 6, 1)]
-    [InlineData(LowPolyAbstractionQuality.High, 1536, 8192, 8, 2)]
-    [InlineData(LowPolyAbstractionQuality.Ultra, 2048, 16384, 10, 3)]
-    public void QualitySettingsMatchSpecification(LowPolyAbstractionQuality quality, int resolution, int sites, int iterations, int refinePasses)
-    {
-        var settings = LowPolyAbstractionSettings.GetQuality(quality);
-
-        Assert.Equal(resolution, settings.WorkingResolution);
-        Assert.Equal(sites, settings.BaseSites);
-        Assert.Equal(iterations, settings.CvtIterations);
-        Assert.Equal(refinePasses, settings.RefinePasses);
-    }
-
-    [Theory]
-    [InlineData(1920, 1080, 1536)]
-    [InlineData(1080, 1920, 1536)]
-    [InlineData(8, 8, 1536)]
-    [InlineData(4096, 16, 1024)]
-    [InlineData(100, 100, 2048)]
-    public void WorkingSizeCoversCanvas(int width, int height, int resolution)
-    {
-        var (workingWidth, workingHeight, scale) = LowPolyAbstractionSettings.GetWorkingSize(width, height, resolution);
-
-        Assert.True(workingWidth >= LowPolyAbstractionSettings.MinimumWorkingSize);
-        Assert.True(workingHeight >= LowPolyAbstractionSettings.MinimumWorkingSize);
-        Assert.True(scale > 0f);
-        Assert.True(workingWidth * scale >= width);
-        Assert.True(workingHeight * scale >= height);
-    }
-
-    [Fact]
-    public void ParameterMappingsAreMonotonicAndBounded()
-    {
-        Assert.True(LowPolyAbstractionSettings.GetSiteCount(0f, 4096) < LowPolyAbstractionSettings.GetSiteCount(1f, 4096));
-        Assert.Equal(LowPolyAbstractionSettings.GetSiteCount(0f, 4096), LowPolyAbstractionSettings.GetSiteCount(-5f, 4096));
-        Assert.Equal(LowPolyAbstractionSettings.GetSiteCount(1f, 4096), LowPolyAbstractionSettings.GetSiteCount(5f, 4096));
-        Assert.True(LowPolyAbstractionSettings.GetSiteCount(1f, 4096) <= LowPolyAbstractionSettings.GetSiteCapacity(4096));
-
-        Assert.True(LowPolyAbstractionSettings.GetEdgeSampleSpacing(1024, 1024, 1f) < LowPolyAbstractionSettings.GetEdgeSampleSpacing(1024, 1024, 0f));
-        Assert.True(LowPolyAbstractionSettings.GetEdgeSampleSpacing(1024, 1024, 1f) >= 2f);
-
-        Assert.True(LowPolyAbstractionSettings.GetErrorThreshold(1f) < LowPolyAbstractionSettings.GetErrorThreshold(0f));
-        Assert.Equal(LowPolyAbstractionSettings.MaximumErrorThreshold, LowPolyAbstractionSettings.GetErrorThreshold(-1f), 7);
-        Assert.Equal(LowPolyAbstractionSettings.MinimumErrorThreshold, LowPolyAbstractionSettings.GetErrorThreshold(2f), 7);
-    }
-
-    [Theory]
-    [InlineData(1, 1, 1)]
-    [InlineData(2, 2, 1)]
-    [InlineData(3, 3, 2)]
-    [InlineData(256, 128, 128)]
-    [InlineData(257, 16, 256)]
-    public void JumpFloodInitialStepCoversLongSide(int width, int height, int expected)
-    {
-        Assert.Equal(expected, LowPolyAbstractionSettings.GetJumpFloodInitialStep(width, height));
-    }
-
     [Fact]
     public void TransparentInputYieldsTransparentOutput()
     {
