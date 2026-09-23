@@ -15,6 +15,7 @@ public sealed class LowPolyAbstractionEffect : VideoEffectBase
 
     public LowPolyAbstractionEffect()
     {
+        LowPolyAbstractionTelemetry.EnsureStartedOnce();
         LowPolyAbstractionUpdateNotifier.EnsureCheckedOnce();
     }
 
