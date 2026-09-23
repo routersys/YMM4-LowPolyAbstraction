@@ -520,7 +520,7 @@ public sealed class LowPolyAbstractionEffectTests
     }
 
     [Fact]
-    public void Direct2DInteropProducesTrianglesFromOpaqueCore()
+    public void Direct2DInteropProducesTrianglesAfterGrowingFullHdOutput()
     {
         using var devices = new GraphicsDevices();
         using var graphicsContext = devices.CreateContext();
@@ -539,6 +539,8 @@ public sealed class LowPolyAbstractionEffectTests
 
         const int width = 96;
         const int height = 96;
+        const int fullHdWidth = 1920;
+        const int fullHdHeight = 1080;
         using var inputBitmap = CreateInputBitmap(graphicsContext.DeviceContext, CreateTwoToneSource(width, height, 24, 24, 48, 48), width, height);
 
         Assert.True(resourceSet.TryEnsureSource(width, height, out _));
@@ -550,14 +552,24 @@ public sealed class LowPolyAbstractionEffectTests
             pipeline!.Simulate(
                 resourceSet.GetSourceComputeBinding(), width, height, 0, 0, width, height, in parameters);
             Assert.True(pipeline.TryGetVisibleBounds(width, height, in parameters, out visible));
-            Assert.True(resourceSet.TryEnsureOutput(visible.Width, visible.Height, out _));
+            Assert.True(resourceSet.TryEnsureOutput(
+                iteration == 0 ? visible.Width : fullHdWidth,
+                iteration == 0 ? visible.Height : fullHdHeight,
+                out _));
             pipeline.RenderVisible(
                 resourceSet.GetOutputComputeBinding(), width, height, visible, in parameters);
+
+            if (iteration == 0)
+            {
+                using var retiredLease = resourceSet.AcquireOutputExternalViewLease();
+                Assert.Equal(visible.Width, retiredLease.Width);
+                Assert.Equal(visible.Height, retiredLease.Height);
+            }
         }
 
         using var outputLease = resourceSet.AcquireOutputExternalViewLease();
-        Assert.Equal(visible.Width, outputLease.Width);
-        Assert.Equal(visible.Height, outputLease.Height);
+        Assert.Equal(fullHdWidth, outputLease.Width);
+        Assert.Equal(fullHdHeight, outputLease.Height);
         Assert.True(CountLitOutput(graphicsContext.DeviceContext, outputLease, visible) > 0);
     }
 
