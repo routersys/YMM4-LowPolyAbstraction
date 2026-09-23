@@ -33,7 +33,18 @@ internal sealed class LowPolyAbstractionCustomEffect(IGraphicsDevicesAndContext 
 
         protected override void UpdateConstants()
         {
-            drawInformation?.SetPixelShaderConstantBuffer(_cb);
+            if (drawInformation is null)
+                return;
+
+            try
+            {
+                drawInformation.SetPixelShaderConstantBuffer(_cb);
+            }
+            catch (Exception exception)
+            {
+                LowPolyAbstractionTelemetry.Report(exception);
+                throw;
+            }
         }
 
         public override void MapInputRectsToOutputRect(

@@ -72,7 +72,17 @@ public sealed class LowPolyAbstractionEffect : VideoEffectBase
     public override IEnumerable<string> CreateExoVideoFilters(int keyFrameIndex, ExoOutputDescription exoOutputDescription) => [];
 
     public override IVideoEffectProcessor CreateVideoEffect(IGraphicsDevicesAndContext devices)
-        => new LowPolyAbstractionEffectProcessor(devices, this);
+    {
+        try
+        {
+            return new LowPolyAbstractionEffectProcessor(devices, this);
+        }
+        catch (Exception exception)
+        {
+            LowPolyAbstractionTelemetry.Report(exception);
+            throw;
+        }
+    }
 
     protected override IEnumerable<IAnimatable> GetAnimatables()
         => _animatables ??= [Amount, Detail, Fidelity, Refine, Gradient, Wireframe, Saturation, Jitter];
