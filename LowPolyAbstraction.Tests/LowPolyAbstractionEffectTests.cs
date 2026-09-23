@@ -468,7 +468,7 @@ public sealed class LowPolyAbstractionEffectTests
         }
 
         using var outputTexture = device.AllocateReadWriteTexture2D<Bgra32, Float4>(rect.Width, rect.Height);
-        pipeline.RenderVisible(sourceTexture, outputTexture, width, height, 0, 0, width, height, rect, in parameters);
+        pipeline.RenderVisible(outputTexture, width, height, rect, in parameters);
         var result = new Bgra32[rect.Width * rect.Height];
         outputTexture.CopyTo(result);
 

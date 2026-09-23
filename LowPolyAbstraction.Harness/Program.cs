@@ -72,7 +72,7 @@ foreach (var quality in new[] { LowPolyAbstractionQuality.Balanced, LowPolyAbstr
     if (pipeline.TryGetVisibleBounds(width, height, in parameters, out var rect))
     {
         using var rectOutput = device.AllocateReadWriteTexture2D<Bgra32, Float4>(rect.Width, rect.Height);
-        pipeline.RenderVisible(sourceTexture, rectOutput, width, height, 0, 0, width, height, rect, in parameters);
+        pipeline.RenderVisible(rectOutput, width, height, rect, in parameters);
         pipeline.WaitForCompletion();
         stopwatch.Restart();
         const int rectFrames = 20;
@@ -80,7 +80,7 @@ foreach (var quality in new[] { LowPolyAbstractionQuality.Balanced, LowPolyAbstr
         {
             pipeline.Simulate(sourceTexture, width, height, 0, 0, width, height, in parameters);
             pipeline.TryGetVisibleBounds(width, height, in parameters, out rect);
-            pipeline.RenderVisible(sourceTexture, rectOutput, width, height, 0, 0, width, height, rect, in parameters);
+            pipeline.RenderVisible(rectOutput, width, height, rect, in parameters);
         }
         pipeline.WaitForCompletion();
         stopwatch.Stop();

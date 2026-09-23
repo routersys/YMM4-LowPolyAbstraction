@@ -150,14 +150,9 @@ internal sealed class LowPolyAbstractionEffectProcessor : VideoEffectProcessorBa
             try
             {
                 _pipeline.RenderVisible(
-                    _interop.SourceTexture,
                     _interop.OutputTexture,
                     canvasWidth,
                     canvasHeight,
-                    margin,
-                    margin,
-                    itemWidth,
-                    itemHeight,
                     rect,
                     in pipelineParameters);
             }

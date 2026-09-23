@@ -182,14 +182,9 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
     }
 
     internal void RenderVisible(
-        ReadWriteTexture2D<Bgra32, Float4> source,
         ReadWriteTexture2D<Bgra32, Float4> output,
         int canvasWidth,
         int canvasHeight,
-        int sourceOffsetX,
-        int sourceOffsetY,
-        int sourceWidth,
-        int sourceHeight,
         PixelRect rect,
         in Parameters parameters)
     {
