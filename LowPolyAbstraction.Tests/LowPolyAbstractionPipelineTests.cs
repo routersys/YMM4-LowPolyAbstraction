@@ -66,8 +66,10 @@ public sealed class LowPolyAbstractionPipelineTests
         {
             for (var x = 0; x < size; x++)
             {
+                var u = x * 256 / size;
+                var v = y * 256 / size;
                 if (inside(x, y))
-                    pixels[y * size + x] = unchecked((int)0xFF000000) | (40 + x * 3 / 4) << 16 | (200 - y / 2) << 8 | (80 + (x + y) / 4);
+                    pixels[y * size + x] = unchecked((int)0xFF000000) | (40 + u * 3 / 4) << 16 | (200 - v / 2) << 8 | (80 + (u + v) / 4);
             }
         }
 
@@ -423,24 +425,77 @@ public sealed class LowPolyAbstractionPipelineTests
     [Theory]
     [InlineData(FineGaps.Lattice)]
     [InlineData(FineGaps.Speckles)]
-    public void GapsFinerThanTheTrianglesArePaintedOver(FineGaps gaps)
+    public void FineGapsStayOpenAndTheMaterialAroundThemIsPainted(FineGaps gaps)
     {
         using var pipeline = CreatePipeline();
         const int size = 256;
+        var inside = FineGapShape(gaps);
 
-        var rendering = Render(pipeline, Silhouette(size, FineGapShape(gaps)), size, size, Parameters(LowPolyAbstractionQuality.High));
+        var rendering = Render(pipeline, Silhouette(size, inside), size, size, Parameters(LowPolyAbstractionQuality.High));
 
-        var painted = 0;
+        int material = 0, painted = 0;
         for (var y = 44; y < 212; y++)
         {
             for (var x = 44; x < 212; x++)
             {
-                if (Alpha(rendering[y * size + x]) > 0)
+                var alpha = Alpha(rendering[y * size + x]);
+                if (!inside(x, y))
+                {
+                    Assert.True(alpha == 0, $"({x}, {y})");
+                    continue;
+                }
+                material++;
+                if (alpha > 0)
                     painted++;
             }
         }
 
-        Assert.True(painted >= 168 * 168 * 0.95, $"{painted}");
+        Assert.True(painted >= material * 0.95, $"{painted}/{material}");
+    }
+
+    [Theory]
+    [InlineData(LowPolyAbstractionQuality.Balanced)]
+    [InlineData(LowPolyAbstractionQuality.High)]
+    [InlineData(LowPolyAbstractionQuality.Ultra)]
+    public void ThePaintIsNeverMoreOpaqueThanTheMaterial(LowPolyAbstractionQuality quality)
+    {
+        using var pipeline = CreatePipeline();
+        const int size = 256;
+        var source = new int[size * size];
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                var distance = Math.Sqrt((x - 128) * (x - 128) + (y - 128) * (y - 128));
+                var alpha = (int)Math.Round(Math.Clamp((100 - distance) / 24, 0, 1) * 255);
+                source[y * size + x] = alpha << 24 | alpha * (40 + x * 3 / 4) / 255 << 16 | alpha * (200 - y / 2) / 255 << 8 | alpha * (80 + (x + y) / 4) / 255;
+            }
+        }
+
+        var rendering = Render(pipeline, source, size, size, Parameters(quality));
+
+        for (var index = 0; index < source.Length; index++)
+            Assert.True(Alpha(rendering[index]) <= Alpha(source[index]), $"({index % size}, {index / size}) {Alpha(rendering[index])} > {Alpha(source[index])}");
+    }
+
+    [Fact]
+    public void TheHollowsStayTransparentWhenTheMaterialIsReducedForTheCalculation()
+    {
+        using var pipeline = CreatePipeline();
+        const int scale = 8, size = 256 * scale;
+        var hollow = HollowShape(Hollow.Notch);
+        bool Inside(int x, int y) => hollow(x / scale, y / scale);
+
+        var rendering = Render(pipeline, Silhouette(size, Inside), size, size, Parameters(LowPolyAbstractionQuality.Balanced));
+
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                if (Alpha(rendering[y * size + x]) > 0)
+                    Assert.True(AnyWithin(x, y, 3, Inside), $"({x}, {y})");
+            }
+        }
     }
 
     [Fact]

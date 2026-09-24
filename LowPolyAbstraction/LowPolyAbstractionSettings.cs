@@ -37,7 +37,6 @@ internal static class LowPolyAbstractionSettings
     public const float MaximumSaturationBoost = 0.6f;
     public const float MaximumLuminanceJitter = 0.08f;
     public const float WireframeWidth = 1.5f;
-    public const float MinimumTriangleCoverage = 0.5f;
     public const float SiteCapacityFraction = 1.5f;
     public const int TriangleCapacitySlack = 16;
     public const int MaximumPendingSubmissions = 32;

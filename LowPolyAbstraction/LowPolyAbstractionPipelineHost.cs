@@ -394,16 +394,16 @@ internal sealed partial class LowPolyAbstractionPipelineHost
         in LowPolyAbstractionPipeline.DerivedValues derived,
         bool computeColors)
     {
-        var lengthA = derived.TriangleCapacity * 16;
+        var lengthA = derived.TriangleCapacity * 14;
         context.For(lengthA, new FillIntShader(grid.TriangleAccumulatorsA, lengthA, 0));
         context.Barrier(grid.TriangleAccumulatorsA);
         context.For(derived.WorkingWidth, derived.WorkingHeight, new TriangleMapShader(
-            GetAssignment(grid, in derived), grid.SitePositions, grid.TriangleVertices, grid.IncidenceCounts, grid.Incidence, grid.Counts,
-            derived.WorkingWidth, derived.WorkingHeight));
+            GetAssignment(grid, in derived), grid.Color, grid.SitePositions, grid.TriangleVertices, grid.IncidenceCounts, grid.Incidence, grid.Counts,
+            derived.WorkingWidth, derived.WorkingHeight, LowPolyAbstractionSettings.AlphaThreshold));
         context.Barrier(grid.Counts);
         context.For(derived.WorkingWidth, derived.WorkingHeight, new TriangleColorPassShader(
             grid.Counts, grid.Color, grid.TriangleAccumulatorsA, grid.TriangleAccumulatorsB,
-            derived.WorkingWidth, derived.WorkingHeight, 0, LowPolyAbstractionSettings.TrimSigmaFactor, LowPolyAbstractionSettings.AlphaThreshold));
+            derived.WorkingWidth, derived.WorkingHeight, 0, LowPolyAbstractionSettings.TrimSigmaFactor));
         context.Barrier(grid.TriangleAccumulatorsA);
         if (computeColors)
         {
@@ -412,12 +412,12 @@ internal sealed partial class LowPolyAbstractionPipelineHost
             context.Barrier(grid.TriangleAccumulatorsB);
             context.For(derived.WorkingWidth, derived.WorkingHeight, new TriangleColorPassShader(
                 grid.Counts, grid.Color, grid.TriangleAccumulatorsA, grid.TriangleAccumulatorsB,
-                derived.WorkingWidth, derived.WorkingHeight, 1, LowPolyAbstractionSettings.TrimSigmaFactor, LowPolyAbstractionSettings.AlphaThreshold));
+                derived.WorkingWidth, derived.WorkingHeight, 1, LowPolyAbstractionSettings.TrimSigmaFactor));
             context.Barrier(grid.TriangleAccumulatorsB);
         }
         context.For(derived.TriangleCapacity, new FinalizeTrianglesShader(
             grid.TriangleAccumulatorsA, grid.TriangleAccumulatorsB, scratch, grid.TriangleColors, grid.TriangleErrors,
-            derived.TriangleCapacity, computeColors ? 1 : 0, LowPolyAbstractionSettings.MinimumTriangleCoverage));
+            derived.TriangleCapacity, computeColors ? 1 : 0));
         if (computeColors)
             context.Barrier(grid.TriangleColors);
         context.Barrier(grid.TriangleErrors);
@@ -450,7 +450,7 @@ internal sealed partial class LowPolyAbstractionPipelineHost
     {
         context.For(rect.Width, rect.Height, new RenderShader(
             GetAssignment(grid, in derived), grid.SitePositions, grid.TriangleVertices, grid.IncidenceCounts, grid.Incidence,
-            grid.TriangleColors, grid.SiteColors, output,
+            grid.TriangleColors, grid.SiteColors, grid.Color, output,
             rect.X, rect.Y, rect.Width, rect.Height,
             derived.WorkingWidth, derived.WorkingHeight, derived.Scale,
             Math.Clamp(parameters.Gradient, 0f, 1f),

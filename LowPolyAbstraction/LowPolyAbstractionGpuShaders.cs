@@ -970,15 +970,18 @@ internal readonly partial struct SortIncidenceShader(
 [GeneratedComputeShaderDescriptor]
 internal readonly partial struct TriangleMapShader(
     ReadWriteBuffer<int> assignment,
+    ReadWriteBuffer<Float4> color,
     ReadWriteBuffer<Float2> sitePositions,
     ReadWriteBuffer<int> triangleVertices,
     ReadWriteBuffer<int> incidenceCounts,
     ReadWriteBuffer<int> incidence,
     ReadWriteBuffer<int> triangleMap,
     int workingWidth,
-    int workingHeight) : IComputeShader
+    int workingHeight,
+    float alphaThreshold) : IComputeShader
 {
     private readonly ReadWriteBuffer<int> assignment = assignment;
+    private readonly ReadWriteBuffer<Float4> color = color;
     private readonly ReadWriteBuffer<Float2> sitePositions = sitePositions;
     private readonly ReadWriteBuffer<int> triangleVertices = triangleVertices;
     private readonly ReadWriteBuffer<int> incidenceCounts = incidenceCounts;
@@ -986,6 +989,7 @@ internal readonly partial struct TriangleMapShader(
     private readonly ReadWriteBuffer<int> triangleMap = triangleMap;
     private readonly int workingWidth = workingWidth;
     private readonly int workingHeight = workingHeight;
+    private readonly float alphaThreshold = alphaThreshold;
 
     public void Execute()
     {
@@ -995,6 +999,11 @@ internal readonly partial struct TriangleMapShader(
             return;
 
         var index = y * workingWidth + x;
+        if (color[index].W <= alphaThreshold)
+        {
+            triangleMap[index] = -1;
+            return;
+        }
         var site = assignment[index];
         if (site < 0)
         {
@@ -1030,8 +1039,7 @@ internal readonly partial struct TriangleColorPassShader(
     int workingWidth,
     int workingHeight,
     int trimmedPass,
-    float trimSigmaFactor,
-    float alphaThreshold) : IComputeShader
+    float trimSigmaFactor) : IComputeShader
 {
     private readonly ReadWriteBuffer<int> triangleMap = triangleMap;
     private readonly ReadWriteBuffer<Float4> color = color;
@@ -1041,7 +1049,6 @@ internal readonly partial struct TriangleColorPassShader(
     private readonly int workingHeight = workingHeight;
     private readonly int trimmedPass = trimmedPass;
     private readonly float trimSigmaFactor = trimSigmaFactor;
-    private readonly float alphaThreshold = alphaThreshold;
 
     private float ReconstructA(int index)
         => accumulatorsA[index + 1] * 4294967296f + Hlsl.AsUInt(accumulatorsA[index]);
@@ -1074,17 +1081,11 @@ internal readonly partial struct TriangleColorPassShader(
         if (triangle < 0)
             return;
         var pixel = color[index];
-        var baseA = triangle * 16;
-        if (pixel.W <= alphaThreshold)
-        {
-            if (trimmedPass == 0)
-                AddCarryA(baseA + 14, 1);
-            return;
-        }
         var l = pixel.X * 0.299f + pixel.Y * 0.587f + pixel.Z * 0.114f;
         var lq = (int)(Hlsl.Saturate(l) * LowPolyAbstractionSettings.ColorScale + 0.5f);
         if (trimmedPass != 0)
         {
+            var baseA = triangle * 14;
             var count = ReconstructA(baseA);
             if (count > 0f)
             {
@@ -1104,6 +1105,7 @@ internal readonly partial struct TriangleColorPassShader(
         }
         else
         {
+            var baseA = triangle * 14;
             AddCarryA(baseA, 1);
             AddCarryA(baseA + 2, (int)(Hlsl.Saturate(pixel.X) * LowPolyAbstractionSettings.ColorScale + 0.5f));
             AddCarryA(baseA + 4, (int)(Hlsl.Saturate(pixel.Y) * LowPolyAbstractionSettings.ColorScale + 0.5f));
@@ -1124,8 +1126,7 @@ internal readonly partial struct FinalizeTrianglesShader(
     ReadWriteBuffer<Float4> triangleColors,
     ReadWriteBuffer<float> triangleErrors,
     int triangleCapacity,
-    int computeColors,
-    float minimumCoverage) : IComputeShader
+    int computeColors) : IComputeShader
 {
     private readonly ReadWriteBuffer<int> accumulatorsA = accumulatorsA;
     private readonly ReadWriteBuffer<int> accumulatorsB = accumulatorsB;
@@ -1134,7 +1135,6 @@ internal readonly partial struct FinalizeTrianglesShader(
     private readonly ReadWriteBuffer<float> triangleErrors = triangleErrors;
     private readonly int triangleCapacity = triangleCapacity;
     private readonly int computeColors = computeColors;
-    private readonly float minimumCoverage = minimumCoverage;
 
     private float ReconstructA(int index)
         => accumulatorsA[index + 1] * 4294967296f + Hlsl.AsUInt(accumulatorsA[index]);
@@ -1155,7 +1155,7 @@ internal readonly partial struct FinalizeTrianglesShader(
             return;
         }
 
-        var baseA = triangle * 16;
+        var baseA = triangle * 14;
         var countA = ReconstructA(baseA);
         if (countA <= 0f)
         {
@@ -1170,11 +1170,6 @@ internal readonly partial struct FinalizeTrianglesShader(
         triangleErrors[triangle] = Hlsl.Max(meanL2 - meanL * meanL, 0f);
         if (computeColors == 0)
             return;
-        if (countA < minimumCoverage * (countA + ReconstructA(baseA + 14)))
-        {
-            triangleColors[triangle] = new Float4(0f, 0f, 0f, 0f);
-            return;
-        }
 
         var baseB = triangle * 10;
         var countB = ReconstructB(baseB);
@@ -1366,6 +1361,7 @@ internal readonly partial struct RenderShader(
     ReadWriteBuffer<int> incidence,
     ReadWriteBuffer<Float4> triangleColors,
     ReadWriteBuffer<Float4> siteColors,
+    ReadWriteBuffer<Float4> color,
     ReadWriteTexture2D<Bgra32, Float4> output,
     int rectOffsetX,
     int rectOffsetY,
@@ -1388,6 +1384,7 @@ internal readonly partial struct RenderShader(
     private readonly ReadWriteBuffer<int> incidence = incidence;
     private readonly ReadWriteBuffer<Float4> triangleColors = triangleColors;
     private readonly ReadWriteBuffer<Float4> siteColors = siteColors;
+    private readonly ReadWriteBuffer<Float4> color = color;
     private readonly ReadWriteTexture2D<Bgra32, Float4> output = output;
     private readonly int rectOffsetX = rectOffsetX;
     private readonly int rectOffsetY = rectOffsetY;
@@ -1419,6 +1416,21 @@ internal readonly partial struct RenderShader(
                 best = triangle;
         }
         return best;
+    }
+
+    private float SourceAlpha(float x, float y)
+    {
+        var fx = Hlsl.Clamp(x - 0.5f, 0f, workingWidth - 1f);
+        var fy = Hlsl.Clamp(y - 0.5f, 0f, workingHeight - 1f);
+        var x0 = (int)fx;
+        var y0 = (int)fy;
+        var x1 = Hlsl.Min(x0 + 1, workingWidth - 1);
+        var y1 = Hlsl.Min(y0 + 1, workingHeight - 1);
+        var tx = fx - x0;
+        var ty = fy - y0;
+        var top = Hlsl.Lerp(color[y0 * workingWidth + x0].W, color[y0 * workingWidth + x1].W, tx);
+        var bottom = Hlsl.Lerp(color[y1 * workingWidth + x0].W, color[y1 * workingWidth + x1].W, tx);
+        return Hlsl.Saturate(Hlsl.Lerp(top, bottom, ty));
     }
 
     public void Execute()
@@ -1455,11 +1467,6 @@ internal readonly partial struct RenderShader(
         var c = sitePositions[i2];
         var bary = LowPolyAbstractionShaderMath.Barycentric(a, b, c, wxf, wyf);
         var flat = triangleColors[triangle];
-        if (flat.W <= 0f)
-        {
-            output[ThreadIds.XY] = new Float4(0f, 0f, 0f, 0f);
-            return;
-        }
         var gouraud = siteColors[i0] * bary.X + siteColors[i1] * bary.Y + siteColors[i2] * bary.Z;
         premultiplied = Hlsl.Lerp(flat, gouraud, gradientAmount);
 
@@ -1492,6 +1499,7 @@ internal readonly partial struct RenderShader(
             straight *= 1f - wireframeStrength * 0.65f * line;
         }
         straight = Hlsl.Saturate(straight);
+        alpha = Hlsl.Min(alpha, SourceAlpha(wxf, wyf));
 
         var r = Hlsl.Min(straight.X * alpha, alpha);
         var g = Hlsl.Min(straight.Y * alpha, alpha);
