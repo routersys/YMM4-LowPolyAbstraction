@@ -24,6 +24,7 @@ float4 main(
 
     float4 poly = PolyTexture.SampleLevel(PolySampler, uv1.xy, 0);
     poly.rgb = min(poly.rgb, poly.a.xxx);
-    float4 blended = poly + source * (1.0 - poly.a);
+    float covered = source.a > 0.0 ? saturate(poly.a / source.a) : 1.0;
+    float4 blended = poly + source * (1.0 - covered);
     return lerp(source, blended, amount);
 }

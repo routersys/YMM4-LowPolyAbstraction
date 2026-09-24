@@ -140,6 +140,38 @@ public sealed class LowPolyAbstractionCustomEffectTests
         Assert.All(rendering.Coordinates(), point => Assert.True(WithinRounding(expected, rendering[point.X, point.Y]), $"({point.X}, {point.Y}) {rendering[point.X, point.Y]}"));
     }
 
+    [Theory]
+    [InlineData(1f)]
+    [InlineData(0.5f)]
+    [InlineData(0.25f)]
+    public void TrianglesCoveringASemiTransparentSourceKeepItsOpacity(float amount)
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        using var source = SourceImage.Solid(context, Width, Height, new Bgra(255, 0, 0, 110));
+        using var poly = SourceImage.Solid(context, Width, Height, new Bgra(0, 0, 255, 110));
+
+        var rendering = Render(context, source.Bitmap, poly.Bitmap, amount);
+
+        Assert.All(rendering.Coordinates(), point => Assert.InRange(rendering[point.X, point.Y].Alpha, 109, 111));
+        if (amount == 1f)
+            Assert.All(rendering.Coordinates(), point => Assert.True(WithinRounding(poly[point.X, point.Y], rendering[point.X, point.Y]), $"({point.X}, {point.Y}) {rendering[point.X, point.Y]}"));
+    }
+
+    [Fact]
+    public void TheSourceShowsOnlyThroughThePartTheTrianglesLeaveUncovered()
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        using var source = SourceImage.Solid(context, Width, Height, new Bgra(255, 0, 0, 200));
+        using var poly = SourceImage.Solid(context, Width, Height, new Bgra(0, 0, 255, 100));
+        var expected = new Bgra(100, 0, 100, 200);
+
+        var rendering = Render(context, source.Bitmap, poly.Bitmap, 1f);
+
+        Assert.All(rendering.Coordinates(), point => Assert.True(WithinRounding(expected, rendering[point.X, point.Y]), $"({point.X}, {point.Y}) {rendering[point.X, point.Y]}"));
+    }
+
     [Fact]
     public void TrianglesOutsideTheSourceAreDrawnOnTheirOwn()
     {
