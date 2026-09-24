@@ -360,6 +360,22 @@ public sealed class LowPolyAbstractionPipelineTests
         Assert.InRange(rect.Y + rect.Height, Math.Min(top + height + padding, canvas), Math.Min(top + height + padding + 3, canvas));
     }
 
+    [Fact]
+    public void ASourceThatTurnsTransparentHasNoVisibleBounds()
+    {
+        using var pipeline = CreatePipeline();
+        var parameters = Parameters();
+        using var source = UploadedSquare();
+        pipeline.Simulate(source, 128, 128, 0, 0, 128, 128, in parameters);
+        Assert.True(pipeline.TryGetVisibleBounds(128, 128, in parameters, out _));
+
+        Upload(source, new int[128 * 128]);
+        pipeline.Simulate(source, 128, 128, 0, 0, 128, 128, in parameters);
+
+        Assert.False(pipeline.TryGetVisibleBounds(128, 128, in parameters, out var rect));
+        Assert.Equal(default, rect);
+    }
+
     static LowPolyAbstractionPipeline.Parameters Changed(LowPolyAbstractionPipeline.Parameters parameters, string setting)
         => setting switch
         {
