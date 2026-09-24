@@ -312,6 +312,25 @@ public sealed class LowPolyAbstractionEffectProcessorTests
     }
 
     [Fact]
+    public void TrianglesAppearOnceATransparentSourceTakesShape()
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        RequireInterop(context);
+        using var empty = SourceImage.Solid(context, Size, Size, Bgra.Transparent);
+        using var source = new SourceImage(context, Size, Size, CenteredSquare);
+        using var processor = new LowPolyAbstractionEffect().CreateVideoEffect(context);
+        processor.SetInput(empty.Bitmap);
+        var before = RenderFrame(context, processor, 0);
+
+        processor.SetInput(source.Bitmap);
+        var after = RenderFrame(context, processor, 0);
+
+        AssertSameAsSource(before, empty);
+        Assert.True(IsRedrawn(after, source));
+    }
+
+    [Fact]
     public void AFailureWhileUpdatingIsNotSwallowed()
     {
         using var devices = new GraphicsDevices();
