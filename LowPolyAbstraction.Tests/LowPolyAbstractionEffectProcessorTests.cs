@@ -327,6 +327,36 @@ public sealed class LowPolyAbstractionEffectProcessorTests
     }
 
     [Theory]
+    [InlineData(nameof(LowPolyAbstractionEffect.Amount))]
+    [InlineData(nameof(LowPolyAbstractionEffect.Detail))]
+    [InlineData(nameof(LowPolyAbstractionEffect.Fidelity))]
+    [InlineData(nameof(LowPolyAbstractionEffect.Refine))]
+    [InlineData(nameof(LowPolyAbstractionEffect.Gradient))]
+    [InlineData(nameof(LowPolyAbstractionEffect.Wireframe))]
+    [InlineData(nameof(LowPolyAbstractionEffect.Saturation))]
+    [InlineData(nameof(LowPolyAbstractionEffect.Jitter))]
+    public void AHalfwayValueDrawsDifferentlyFromTheFullValue(string setting)
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        RequireInterop(context);
+        using var source = new SourceImage(context, Size, Size, CenteredSquare);
+        Rendering RenderWith(double value)
+        {
+            var effect = new LowPolyAbstractionEffect();
+            ((Animation)typeof(LowPolyAbstractionEffect).GetProperty(setting)!.GetValue(effect)!).Values[0].Value = value;
+            using var processor = effect.CreateVideoEffect(context);
+            processor.SetInput(source.Bitmap);
+            return RenderFrame(context, processor, 0);
+        }
+
+        var halfway = RenderWith(50d);
+        var full = RenderWith(100d);
+
+        Assert.False(halfway.SamePixelsAs(full), setting);
+    }
+
+    [Theory]
     [MemberData(nameof(LaterChanges))]
     public void AProcessorThatDrewOtherSettingsDrawsLikeAFreshOne(string setting, Action<LowPolyAbstractionEffect> change)
     {
