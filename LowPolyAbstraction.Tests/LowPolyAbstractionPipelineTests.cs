@@ -276,6 +276,37 @@ public sealed class LowPolyAbstractionPipelineTests
         }
     }
 
+    [Theory]
+    [InlineData(LowPolyAbstractionQuality.Balanced)]
+    [InlineData(LowPolyAbstractionQuality.High)]
+    [InlineData(LowPolyAbstractionQuality.Ultra)]
+    public void ADiscIsNotPaintedBeyondItsOutline(LowPolyAbstractionQuality quality)
+    {
+        using var pipeline = CreatePipeline();
+        const int size = 256;
+        static int DistanceSquared(int x, int y) => (x - 128) * (x - 128) + (y - 128) * (y - 128);
+        var source = new int[size * size];
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                if (DistanceSquared(x, y) < 90 * 90)
+                    source[y * size + x] = unchecked((int)0xFF000000) | (40 + x * 3 / 4) << 16 | (200 - y / 2) << 8 | (80 + (x + y) / 4);
+            }
+        }
+
+        var rendering = Render(pipeline, source, size, size, Parameters(quality));
+
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                if (DistanceSquared(x, y) > 93 * 93)
+                    Assert.True(Alpha(rendering[y * size + x]) == 0, $"({x}, {y})");
+            }
+        }
+    }
+
     [Fact]
     public void AWarmPipelineAllocatesNoManagedMemory()
     {

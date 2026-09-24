@@ -1548,6 +1548,10 @@ internal static class LowPolyAbstractionShaderMath
 
     public static bool ContainsPoint(Float2 a, Float2 b, Float2 c, float px, float py)
     {
+        var v0 = b - a;
+        var v1 = c - a;
+        if (Hlsl.Abs(v0.X * v1.Y - v0.Y * v1.X) < 1e-6f)
+            return false;
         var bary = Barycentric(a, b, c, px, py);
         return bary.X >= -1e-4f && bary.Y >= -1e-4f && bary.Z >= -1e-4f;
     }
