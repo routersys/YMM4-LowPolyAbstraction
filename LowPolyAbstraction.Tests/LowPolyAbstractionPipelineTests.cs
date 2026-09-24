@@ -134,6 +134,34 @@ public sealed class LowPolyAbstractionPipelineTests
         });
     }
 
+    [Theory]
+    [InlineData(LowPolyAbstractionQuality.Balanced, 0f)]
+    [InlineData(LowPolyAbstractionQuality.Balanced, 1f)]
+    [InlineData(LowPolyAbstractionQuality.High, 0f)]
+    [InlineData(LowPolyAbstractionQuality.High, 1f)]
+    public void ASingleColorShapeIsDrawnInItsOwnColor(LowPolyAbstractionQuality quality, float gradient)
+    {
+        using var pipeline = CreatePipeline();
+        const int color = unchecked((int)0xFF3080C0);
+        var source = TwoTone(128, 128, 24, 24, 80, 80).Select(pixel => pixel == 0 ? 0 : color).ToArray();
+
+        var rendering = Render(pipeline, source, 128, 128, Parameters(quality, gradient: gradient, saturation: 0f, jitter: 0f));
+
+        var drawn = 0;
+        for (var y = 24; y < 104; y++)
+        {
+            for (var x = 24; x < 104; x++)
+            {
+                var pixel = rendering[y * 128 + x];
+                if (Alpha(pixel) == 0)
+                    continue;
+                drawn++;
+                Assert.True(pixel == color, $"({x}, {y}) {pixel:X8}");
+            }
+        }
+        Assert.True(drawn > 80 * 80 / 2, $"{drawn}");
+    }
+
     [Fact]
     public void MoreDetailChangesTheTriangulation()
     {
