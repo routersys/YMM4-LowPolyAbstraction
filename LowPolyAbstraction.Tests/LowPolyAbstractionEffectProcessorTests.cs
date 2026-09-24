@@ -268,6 +268,28 @@ public sealed class LowPolyAbstractionEffectProcessorTests
     }
 
     [Theory]
+    [MemberData(nameof(LaterChanges))]
+    public void AProcessorThatDrewOtherSettingsDrawsLikeAFreshOne(string setting, Action<LowPolyAbstractionEffect> change)
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        RequireInterop(context);
+        using var source = new SourceImage(context, Size, Size, CenteredSquare);
+        var effect = new LowPolyAbstractionEffect();
+        using var processor = effect.CreateVideoEffect(context);
+        processor.SetInput(source.Bitmap);
+        RenderFrame(context, processor, 0);
+        change(effect);
+        using var fresh = effect.CreateVideoEffect(context);
+        fresh.SetInput(source.Bitmap);
+        var expected = RenderFrame(context, fresh, 0);
+
+        var reused = RenderFrame(context, processor, 0);
+
+        Assert.True(reused.SamePixelsAs(expected), setting);
+    }
+
+    [Theory]
     [InlineData(32, 128)]
     [InlineData(128, 32)]
     public void AResizedSourceKeepsProducingTriangles(int firstSize, int secondSize)
