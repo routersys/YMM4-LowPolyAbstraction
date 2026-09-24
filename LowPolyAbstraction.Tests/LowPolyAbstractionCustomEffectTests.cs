@@ -173,7 +173,21 @@ public sealed class LowPolyAbstractionCustomEffectTests
     }
 
     [Fact]
-    public void TrianglesOutsideTheSourceAreDrawnOnTheirOwn()
+    public void TrianglesMoreOpaqueThanTheSourceAreLoweredToItsOpacity()
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        using var source = SourceImage.Solid(context, Width, Height, new Bgra(255, 0, 0, 100));
+        using var poly = SourceImage.Solid(context, Width, Height, new Bgra(0, 0, 255, 200));
+        var expected = new Bgra(0, 0, 100, 100);
+
+        var rendering = Render(context, source.Bitmap, poly.Bitmap, 1f);
+
+        Assert.All(rendering.Coordinates(), point => Assert.True(WithinRounding(expected, rendering[point.X, point.Y]), $"({point.X}, {point.Y}) {rendering[point.X, point.Y]}"));
+    }
+
+    [Fact]
+    public void TrianglesOutsideTheSourceAreNotDrawn()
     {
         using var devices = new GraphicsDevices();
         using var context = devices.CreateContext();
@@ -181,11 +195,10 @@ public sealed class LowPolyAbstractionCustomEffectTests
         using var poly = SourceImage.Solid(context, 8, 8, HalfPoly);
         using var moved = Translate(context, poly.Bitmap, 50f, 4f);
         using var movedOutput = moved.Output;
-        var expected = Over(HalfPoly.Premultiplied(), Bgra.Transparent, 1f);
 
         var rendering = Render(context, source.Bitmap, movedOutput, 1f);
 
-        Assert.True(WithinRounding(expected, rendering[53, 7]), $"{rendering[53, 7]}");
+        Assert.Equal(Bgra.Transparent, rendering[53, 7]);
         Assert.Equal(Blue.Premultiplied(), rendering[10, 10]);
         Assert.Equal(Bgra.Transparent, rendering[45, 10]);
     }
