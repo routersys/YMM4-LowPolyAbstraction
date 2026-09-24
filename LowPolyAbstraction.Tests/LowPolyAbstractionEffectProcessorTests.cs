@@ -157,6 +157,65 @@ public sealed class LowPolyAbstractionEffectProcessorTests
         AssertSameAsSource(rendering, source);
     }
 
+    static Bgra Tiled(int x, int y) => Pattern(x % Size, y % Size);
+
+    static readonly int BeyondTheCanvasLimit = LowPolyAbstractionSettings.MaximumCanvasSize - LowPolyAbstractionSettings.MarginPadding * 2 + 1;
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public void AnImageBeyondTheCanvasLimitPassesThrough(bool wide)
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        RequireInterop(context);
+        using var source = wide
+            ? new SourceImage(context, BeyondTheCanvasLimit, 16, Tiled)
+            : new SourceImage(context, 16, BeyondTheCanvasLimit, Tiled);
+        using var processor = new LowPolyAbstractionEffect().CreateVideoEffect(context);
+        processor.SetInput(source.Bitmap);
+
+        var rendering = RenderFrame(context, processor, 0);
+
+        AssertSameAsSource(rendering, source);
+    }
+
+    [Fact]
+    public void AnImageFillingTheCanvasLimitIsRedrawn()
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        RequireInterop(context);
+        using var source = new SourceImage(context, BeyondTheCanvasLimit - 1, 16, Tiled);
+        using var processor = new LowPolyAbstractionEffect().CreateVideoEffect(context);
+        processor.SetInput(source.Bitmap);
+
+        var rendering = RenderFrame(context, processor, 0);
+
+        Assert.True(IsRedrawn(rendering, source));
+    }
+
+    [Fact]
+    public void AnImageAfterOneBeyondTheCanvasLimitIsRedrawnAgain()
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        RequireInterop(context);
+        using var source = new SourceImage(context, Size, Size, CenteredSquare);
+        using var oversized = new SourceImage(context, BeyondTheCanvasLimit, 16, Tiled);
+        using var processor = new LowPolyAbstractionEffect().CreateVideoEffect(context);
+        processor.SetInput(source.Bitmap);
+        var first = RenderFrame(context, processor, 0);
+        processor.SetInput(oversized.Bitmap);
+        RenderFrame(context, processor, 0);
+
+        processor.SetInput(source.Bitmap);
+        var again = RenderFrame(context, processor, 0);
+
+        Assert.True(IsRedrawn(first, source));
+        Assert.True(again.SamePixelsAs(first));
+    }
+
     [Fact]
     public void ReturningToAFrameReproducesItExactly()
     {
