@@ -162,6 +162,28 @@ public sealed class LowPolyAbstractionPipelineTests
         Assert.True(drawn > 80 * 80 / 2, $"{drawn}");
     }
 
+    [Theory]
+    [InlineData(128, 128, LowPolyAbstractionQuality.High)]
+    [InlineData(96, 96, LowPolyAbstractionQuality.High)]
+    [InlineData(160, 192, LowPolyAbstractionQuality.High)]
+    [InlineData(128, 96, LowPolyAbstractionQuality.High)]
+    [InlineData(96, 128, LowPolyAbstractionQuality.High)]
+    [InlineData(128, 128, LowPolyAbstractionQuality.Balanced)]
+    public void APipelineThatDrewAnotherImageDrawsLikeAFreshOne(int previousWidth, int previousHeight, LowPolyAbstractionQuality previousQuality)
+    {
+        var source = TwoTone(128, 128, 24, 24, 80, 80);
+        var parameters = Parameters(LowPolyAbstractionQuality.High, seed: 7);
+        int[] expected;
+        using (var fresh = CreatePipeline())
+            expected = Render(fresh, source, 128, 128, parameters);
+        using var pipeline = CreatePipeline();
+        Render(pipeline, Noise(previousWidth, previousHeight, 8, 8, previousWidth - 16, previousHeight - 16), previousWidth, previousHeight, Parameters(previousQuality, seed: 3));
+
+        var reused = Render(pipeline, source, 128, 128, parameters);
+
+        Assert.Equal(expected, reused);
+    }
+
     [Fact]
     public void MoreDetailChangesTheTriangulation()
     {
