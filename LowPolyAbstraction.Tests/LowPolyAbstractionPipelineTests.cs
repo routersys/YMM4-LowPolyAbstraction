@@ -135,31 +135,35 @@ public sealed class LowPolyAbstractionPipelineTests
     }
 
     [Theory]
-    [InlineData(LowPolyAbstractionQuality.Balanced, 0f)]
-    [InlineData(LowPolyAbstractionQuality.Balanced, 1f)]
-    [InlineData(LowPolyAbstractionQuality.High, 0f)]
-    [InlineData(LowPolyAbstractionQuality.High, 1f)]
-    public void ASingleColorShapeIsDrawnInItsOwnColor(LowPolyAbstractionQuality quality, float gradient)
+    [InlineData(LowPolyAbstractionQuality.Balanced, 0f, 128)]
+    [InlineData(LowPolyAbstractionQuality.Balanced, 1f, 128)]
+    [InlineData(LowPolyAbstractionQuality.High, 0f, 128)]
+    [InlineData(LowPolyAbstractionQuality.High, 1f, 128)]
+    [InlineData(LowPolyAbstractionQuality.High, 0f, 1600)]
+    public void ASingleColorShapeIsDrawnInItsOwnColor(LowPolyAbstractionQuality quality, float gradient, int size)
     {
         using var pipeline = CreatePipeline();
         const int color = unchecked((int)0xFF3080C0);
-        var source = TwoTone(128, 128, 24, 24, 80, 80).Select(pixel => pixel == 0 ? 0 : color).ToArray();
+        var start = size * 3 / 16;
+        var side = size * 5 / 8;
+        var source = TwoTone(size, size, start, start, side, side).Select(pixel => pixel == 0 ? 0 : color).ToArray();
 
-        var rendering = Render(pipeline, source, 128, 128, Parameters(quality, gradient: gradient, saturation: 0f, jitter: 0f));
+        var rendering = Render(pipeline, source, size, size, Parameters(quality, gradient: gradient, saturation: 0f, jitter: 0f));
 
         var drawn = 0;
-        for (var y = 24; y < 104; y++)
+        for (var y = start; y < start + side; y++)
         {
-            for (var x = 24; x < 104; x++)
+            for (var x = start; x < start + side; x++)
             {
-                var pixel = rendering[y * 128 + x];
+                var pixel = rendering[y * size + x];
                 if (Alpha(pixel) == 0)
                     continue;
                 drawn++;
-                Assert.True(pixel == color, $"({x}, {y}) {pixel:X8}");
+                if (pixel != color)
+                    Assert.Fail($"({x}, {y}) {pixel:X8}");
             }
         }
-        Assert.True(drawn > 80 * 80 / 2, $"{drawn}");
+        Assert.True(drawn > side * side / 2, $"{drawn}");
     }
 
     [Theory]
