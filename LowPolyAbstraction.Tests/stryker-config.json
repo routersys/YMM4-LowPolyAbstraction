@@ -2,7 +2,7 @@
   "stryker-config": {
     "project": "LowPolyAbstraction.csproj",
     "test-runner": "mtp",
-    "coverage-analysis": "off",
+    "coverage-analysis": "perTest",
     "mutate": [
       "**/*.cs",
       "!**/YMM4-GitHubUpdateNotifier/**",
