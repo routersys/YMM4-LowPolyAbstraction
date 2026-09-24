@@ -3,6 +3,8 @@
     "project": "LowPolyAbstraction.csproj",
     "test-runner": "mtp",
     "coverage-analysis": "perTest",
+    "concurrency": 8,
+    "additional-timeout": 60000,
     "mutate": [
       "**/*.cs",
       "!**/YMM4-GitHubUpdateNotifier/**",
