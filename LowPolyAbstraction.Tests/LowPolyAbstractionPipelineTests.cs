@@ -167,6 +167,38 @@ public sealed class LowPolyAbstractionPipelineTests
     }
 
     [Theory]
+    [InlineData(0.5f)]
+    [InlineData(0.2f)]
+    public void TheWireframeDarkensTheSameLinesInProportionToItsValue(float wireframe)
+    {
+        using var pipeline = CreatePipeline();
+        const int color = unchecked((int)0xFF3080C0);
+        var source = TwoTone(128, 128, 24, 24, 80, 80).Select(pixel => pixel == 0 ? 0 : color).ToArray();
+        int[] RenderWith(float value) => Render(pipeline, source, 128, 128, Parameters(gradient: 0f, wireframe: value, saturation: 0f, jitter: 0f, seed: 1));
+        var plain = RenderWith(0f);
+        var full = RenderWith(1f);
+
+        var partial = RenderWith(wireframe);
+
+        var lined = 0;
+        for (var index = 0; index < source.Length; index++)
+        {
+            if (plain[index] != color)
+                continue;
+            if (full[index] != color)
+                lined++;
+            for (var shift = 0; shift < 24; shift += 8)
+            {
+                var channel = (color >> shift) & 255;
+                var fullDarkening = channel - ((full[index] >> shift) & 255);
+                var partialDarkening = channel - ((partial[index] >> shift) & 255);
+                Assert.InRange(partialDarkening, fullDarkening * wireframe - 1, fullDarkening * wireframe + 1);
+            }
+        }
+        Assert.True(lined > 128, $"{lined}");
+    }
+
+    [Theory]
     [InlineData(128, 128, LowPolyAbstractionQuality.High)]
     [InlineData(96, 96, LowPolyAbstractionQuality.High)]
     [InlineData(160, 192, LowPolyAbstractionQuality.High)]

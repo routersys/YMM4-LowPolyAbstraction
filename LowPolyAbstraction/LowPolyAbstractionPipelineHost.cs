@@ -454,8 +454,8 @@ internal sealed partial class LowPolyAbstractionPipelineHost
             rect.X, rect.Y, rect.Width, rect.Height,
             derived.WorkingWidth, derived.WorkingHeight, derived.Scale,
             Math.Clamp(parameters.Gradient, 0f, 1f),
-            Math.Clamp(parameters.Wireframe, 0f, 1f) * LowPolyAbstractionSettings.MaximumWireframeWidth,
-            Math.Clamp(parameters.Wireframe, 0f, 1f) > 0f ? 1f : 0f,
+            LowPolyAbstractionSettings.WireframeWidth,
+            Math.Clamp(parameters.Wireframe, 0f, 1f),
             Math.Clamp(parameters.Saturation, 0f, 1f),
             Math.Clamp(parameters.Jitter, 0f, 1f),
             parameters.Seed));

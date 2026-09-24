@@ -18,7 +18,7 @@ SeedDescription,,三角形の配置を決める固定値です,A fixed value tha
 Gradient,,グラデーション,Gradient,渐变,漸變,그라데이션,Degradado,التدرج,Gradasi
 GradientDescription,,三角形内の塗りのグラデーションの強さです,Strength of the gradient fill inside each triangle,三角形内部渐变填充的强度,三角形內部漸變填充的強度,삼각형 내부 그라데이션 채우기의 강도입니다,Intensidad del relleno degradado dentro de cada triángulo,شدة التعبئة المتدرجة داخل كل مثلث,Kekuatan isian gradasi di dalam setiap segitiga
 Wireframe,,輪郭線,Wireframe,轮廓线,輪廓線,윤곽선,Malla,الإطار الشبكي,Rangka
-WireframeDescription,,三角形の境界線の濃さです,Darkness of the triangle boundary lines,三角形边界线的浓度,三角形邊界線的濃度,삼각형 경계선의 진하기입니다,Oscuridad de las líneas de borde de los triángulos,شدة خطوط حدود المثلثات,Ketebalan garis batas segitiga
+WireframeDescription,,三角形の境界線の濃さです,Darkness of the triangle boundary lines,三角形边界线的浓度,三角形邊界線的濃度,삼각형 경계선의 진하기입니다,Oscuridad de las líneas de borde de los triángulos,شدة خطوط حدود المثلثات,Tingkat kegelapan garis batas segitiga
 Saturation,,彩度,Saturation,饱和度,飽和度,채도,Saturación,التشبع,Saturasi
 SaturationDescription,,三角形の色の彩度の強調量です,Amount of saturation boost of the triangle colors,三角形颜色饱和度的增强量,三角形顏色飽和度的增強量,삼각형 색 채도의 강조량입니다,Cantidad de realce de saturación de los colores de los triángulos,مقدار تعزيز تشبع ألوان المثلثات,Jumlah peningkatan saturasi warna segitiga
 Jitter,,明度ゆらぎ,Brightness Jitter,明度扰动,明度擾動,명도 요동,Variación de brillo,تذبذب السطوع,Fluktuasi Kecerahan
