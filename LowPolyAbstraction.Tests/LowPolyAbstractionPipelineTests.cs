@@ -185,6 +185,15 @@ public sealed class LowPolyAbstractionPipelineTests
     }
 
     [Fact]
+    public void APixelCountBeyondTheIntegerRangeIsRejected()
+    {
+        using var pipeline = CreatePipeline();
+        var parameters = Parameters();
+
+        Assert.Throws<OverflowException>(() => pipeline.Process([], [], 65536, 65536, in parameters));
+    }
+
+    [Fact]
     public void MoreDetailChangesTheTriangulation()
     {
         using var pipeline = CreatePipeline();
