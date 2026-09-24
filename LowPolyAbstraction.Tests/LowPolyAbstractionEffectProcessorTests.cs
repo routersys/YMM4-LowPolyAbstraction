@@ -14,6 +14,9 @@ public sealed class LowPolyAbstractionEffectProcessorTests
     const int Start = 16;
     const int End = 48;
 
+    static readonly Bgra Red = Bgra.Opaque(0, 0, 255);
+    static readonly Bgra GreenOfTheSameBrightness = Bgra.Opaque(0, 130, 0);
+
     static Bgra Pattern(int x, int y)
     {
         var noise = (int)(((uint)(x * 73856093 ^ y * 19349663) * 0x85EBCA6Bu) >> 26);
@@ -21,6 +24,8 @@ public sealed class LowPolyAbstractionEffectProcessorTests
     }
 
     static Bgra CenteredSquare(int x, int y) => x is >= Start and < End && y is >= Start and < End ? Pattern(x, y) : Bgra.Transparent;
+
+    static Func<int, int, Bgra> Filled(Bgra color) => (x, y) => x is >= Start and < End && y is >= Start and < End ? color : Bgra.Transparent;
 
     static void RequireInterop(IGraphicsDevicesAndContext devices)
     {
@@ -172,6 +177,28 @@ public sealed class LowPolyAbstractionEffectProcessorTests
 
         AssertSameAsSource(start, source);
         Assert.True(IsRedrawn(end, source));
+    }
+
+    [Fact]
+    public void ARecoloredImageIsDrawnLikeAFreshOne()
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        RequireInterop(context);
+        using var red = new SourceImage(context, Size, Size, Filled(Red));
+        using var green = new SourceImage(context, Size, Size, Filled(GreenOfTheSameBrightness));
+        var effect = new LowPolyAbstractionEffect();
+        using var processor = effect.CreateVideoEffect(context);
+        processor.SetInput(red.Bitmap);
+        RenderFrame(context, processor, 0);
+        using var fresh = effect.CreateVideoEffect(context);
+        fresh.SetInput(green.Bitmap);
+        var expected = RenderFrame(context, fresh, 0);
+
+        processor.SetInput(green.Bitmap);
+        var recolored = RenderFrame(context, processor, 0);
+
+        Assert.True(recolored.SamePixelsAs(expected));
     }
 
     public static readonly TheoryData<string, Action<LowPolyAbstractionEffect>> LaterChanges = new()

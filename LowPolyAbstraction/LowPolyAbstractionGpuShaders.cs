@@ -111,7 +111,10 @@ internal readonly partial struct AnalyzeShader(
         var l = mean.X * 0.299f + mean.Y * 0.587f + mean.Z * 0.114f;
         luma[index] = l + mean.W;
 
-        var quantized = (uint)(Hlsl.Saturate(l) * 255f + 0.5f) | ((uint)(Hlsl.Saturate(mean.W) * 255f + 0.5f) << 8);
+        var quantized = (uint)(Hlsl.Saturate(mean.X) * 255f + 0.5f) |
+            ((uint)(Hlsl.Saturate(mean.Y) * 255f + 0.5f) << 8) |
+            ((uint)(Hlsl.Saturate(mean.Z) * 255f + 0.5f) << 16) |
+            ((uint)(Hlsl.Saturate(mean.W) * 255f + 0.5f) << 24);
         var mixed = ((uint)index * 0x9E3779B9u) ^ (quantized * 0x85EBCA6Bu);
         mixed ^= mixed >> 16;
         mixed *= 0x85EBCA6Bu;
