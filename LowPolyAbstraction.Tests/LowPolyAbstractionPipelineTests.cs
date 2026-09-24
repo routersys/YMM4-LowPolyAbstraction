@@ -59,6 +59,70 @@ public sealed class LowPolyAbstractionPipelineTests
         return pixels;
     }
 
+    static int[] Silhouette(int size, Func<int, int, bool> inside)
+    {
+        var pixels = new int[size * size];
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                if (inside(x, y))
+                    pixels[y * size + x] = unchecked((int)0xFF000000) | (40 + x * 3 / 4) << 16 | (200 - y / 2) << 8 | (80 + (x + y) / 4);
+            }
+        }
+
+        return pixels;
+    }
+
+    public enum Hollow
+    {
+        Notch,
+        Gap,
+        Hole,
+    }
+
+    static Func<int, int, bool> HollowShape(Hollow hollow)
+        => hollow switch
+        {
+            Hollow.Notch => (x, y) => x is >= 40 and < 216 && y is >= 40 and < 216 && !(x is >= 116 and < 140 && y < 180),
+            Hollow.Gap => (x, y) => y is >= 60 and < 196 && (x is >= 40 and < 110 || x is >= 146 and < 216),
+            _ => (x, y) => (x - 128) * (x - 128) + (y - 128) * (y - 128) is < 100 * 100 and >= 45 * 45,
+        };
+
+    public enum FineGaps
+    {
+        Lattice,
+        Speckles,
+    }
+
+    static Func<int, int, bool> FineGapShape(FineGaps gaps)
+        => gaps switch
+        {
+            FineGaps.Lattice => (x, y) => x is >= 40 and < 216 && y is >= 40 and < 216 && x % 8 != 0 && y % 8 != 0,
+            _ => (x, y) =>
+            {
+                var value = (uint)(x * 73856093 ^ y * 19349663);
+                value ^= value >> 13;
+                value *= 0x85EBCA6Bu;
+                value ^= value >> 16;
+                return x is >= 40 and < 216 && y is >= 40 and < 216 && value % 50 != 0;
+            },
+        };
+
+    static bool AnyWithin(int x, int y, int reach, Func<int, int, bool> predicate)
+    {
+        for (var dy = -reach; dy <= reach; dy++)
+        {
+            for (var dx = -reach; dx <= reach; dx++)
+            {
+                if (predicate(x + dx, y + dy))
+                    return true;
+            }
+        }
+
+        return false;
+    }
+
     static int Alpha(int pixel) => (pixel >> 24) & 255;
 
     static int LitPixels(int[] pixels) => pixels.Count(pixel => Alpha(pixel) > 8);
@@ -285,15 +349,7 @@ public sealed class LowPolyAbstractionPipelineTests
         using var pipeline = CreatePipeline();
         const int size = 256;
         static int DistanceSquared(int x, int y) => (x - 128) * (x - 128) + (y - 128) * (y - 128);
-        var source = new int[size * size];
-        for (var y = 0; y < size; y++)
-        {
-            for (var x = 0; x < size; x++)
-            {
-                if (DistanceSquared(x, y) < 90 * 90)
-                    source[y * size + x] = unchecked((int)0xFF000000) | (40 + x * 3 / 4) << 16 | (200 - y / 2) << 8 | (80 + (x + y) / 4);
-            }
-        }
+        var source = Silhouette(size, (x, y) => DistanceSquared(x, y) < 90 * 90);
 
         var rendering = Render(pipeline, source, size, size, Parameters(quality));
 
@@ -305,6 +361,86 @@ public sealed class LowPolyAbstractionPipelineTests
                     Assert.True(Alpha(rendering[y * size + x]) == 0, $"({x}, {y})");
             }
         }
+    }
+
+    [Theory]
+    [InlineData(Hollow.Notch, LowPolyAbstractionQuality.Balanced)]
+    [InlineData(Hollow.Notch, LowPolyAbstractionQuality.High)]
+    [InlineData(Hollow.Notch, LowPolyAbstractionQuality.Ultra)]
+    [InlineData(Hollow.Gap, LowPolyAbstractionQuality.Balanced)]
+    [InlineData(Hollow.Gap, LowPolyAbstractionQuality.High)]
+    [InlineData(Hollow.Gap, LowPolyAbstractionQuality.Ultra)]
+    [InlineData(Hollow.Hole, LowPolyAbstractionQuality.Balanced)]
+    [InlineData(Hollow.Hole, LowPolyAbstractionQuality.High)]
+    [InlineData(Hollow.Hole, LowPolyAbstractionQuality.Ultra)]
+    public void TheHollowsOfAShapeStayTransparent(Hollow hollow, LowPolyAbstractionQuality quality)
+    {
+        using var pipeline = CreatePipeline();
+        const int size = 256;
+        var inside = HollowShape(hollow);
+
+        var rendering = Render(pipeline, Silhouette(size, inside), size, size, Parameters(quality));
+
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                if (!AnyWithin(x, y, 3, inside))
+                    Assert.True(Alpha(rendering[y * size + x]) == 0, $"({x}, {y})");
+            }
+        }
+    }
+
+    [Theory]
+    [InlineData(Hollow.Notch, LowPolyAbstractionQuality.Balanced)]
+    [InlineData(Hollow.Gap, LowPolyAbstractionQuality.High)]
+    [InlineData(Hollow.Hole, LowPolyAbstractionQuality.Ultra)]
+    public void TheBodyOfAHollowShapeStaysPainted(Hollow hollow, LowPolyAbstractionQuality quality)
+    {
+        using var pipeline = CreatePipeline();
+        const int size = 256;
+        var inside = HollowShape(hollow);
+
+        var rendering = Render(pipeline, Silhouette(size, inside), size, size, Parameters(quality));
+
+        int body = 0, painted = 0;
+        for (var y = 0; y < size; y++)
+        {
+            for (var x = 0; x < size; x++)
+            {
+                if (AnyWithin(x, y, 3, (sx, sy) => !inside(sx, sy)))
+                    continue;
+                body++;
+                if (Alpha(rendering[y * size + x]) > 0)
+                    painted++;
+            }
+        }
+
+        Assert.True(body > 10000);
+        Assert.True(painted >= body * 0.99, $"{painted}/{body}");
+    }
+
+    [Theory]
+    [InlineData(FineGaps.Lattice)]
+    [InlineData(FineGaps.Speckles)]
+    public void GapsFinerThanTheTrianglesArePaintedOver(FineGaps gaps)
+    {
+        using var pipeline = CreatePipeline();
+        const int size = 256;
+
+        var rendering = Render(pipeline, Silhouette(size, FineGapShape(gaps)), size, size, Parameters(LowPolyAbstractionQuality.High));
+
+        var painted = 0;
+        for (var y = 44; y < 212; y++)
+        {
+            for (var x = 44; x < 212; x++)
+            {
+                if (Alpha(rendering[y * size + x]) > 0)
+                    painted++;
+            }
+        }
+
+        Assert.True(painted >= 168 * 168 * 0.95, $"{painted}");
     }
 
     [Fact]

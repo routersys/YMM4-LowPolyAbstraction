@@ -295,7 +295,7 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
                     siteColorsLength: siteCapacity,
                     siteKindsLength: siteCapacity,
                     sitePositionsLength: siteCapacity,
-                    triangleAccumulatorsALength: triangleCapacity * 14,
+                    triangleAccumulatorsALength: triangleCapacity * 16,
                     triangleAccumulatorsBLength: triangleCapacity * 10,
                     triangleColorsLength: triangleCapacity,
                     triangleErrorsLength: triangleCapacity,
