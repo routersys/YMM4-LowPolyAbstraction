@@ -1,5 +1,8 @@
 using System.Globalization;
+using System.Numerics;
 using ComputeWeave;
+using Vortice.Direct2D1;
+using Vortice.Direct2D1.Effects;
 using YukkuriMovieMaker.Commons;
 using YukkuriMovieMaker.Json;
 using YukkuriMovieMaker.Player.Video;
@@ -91,6 +94,36 @@ public sealed class LowPolyAbstractionEffectProcessorTests
             if (point.X < Start - padding || point.X > End + padding || point.Y < Start - padding || point.Y > End + padding)
                 Assert.Equal(Bgra.Transparent, pixel);
         });
+    }
+
+    [Theory]
+    [InlineData(100, 50)]
+    [InlineData(-37, 21)]
+    public void TheTrianglesTravelWithTheImage(int dx, int dy)
+    {
+        using var devices = new GraphicsDevices();
+        using var context = devices.CreateContext();
+        RequireInterop(context);
+        using var source = new SourceImage(context, Size, Size, CenteredSquare);
+        using var moved = new AffineTransform2D(context.DeviceContext)
+        {
+            InterPolationMode = AffineTransform2DInterpolationMode.NearestNeighbor,
+            BorderMode = BorderMode.Hard,
+            TransformMatrix = Matrix3x2.CreateTranslation(dx, dy),
+        };
+        moved.SetInput(0, source.Bitmap, true);
+        using var movedOutput = moved.Output;
+        using var inPlaceProcessor = new LowPolyAbstractionEffect().CreateVideoEffect(context);
+        inPlaceProcessor.SetInput(source.Bitmap);
+        var inPlace = RenderFrame(context, inPlaceProcessor, 0);
+        using var travelledProcessor = new LowPolyAbstractionEffect().CreateVideoEffect(context);
+        travelledProcessor.SetInput(movedOutput);
+
+        var travelled = RenderFrame(context, travelledProcessor, 0);
+
+        Assert.True(IsRedrawn(inPlace, source));
+        Assert.Equal((inPlace.Left + dx, inPlace.Top + dy, inPlace.Width, inPlace.Height), (travelled.Left, travelled.Top, travelled.Width, travelled.Height));
+        Assert.All(inPlace.Coordinates(), point => Assert.True(inPlace[point.X, point.Y] == travelled[point.X + dx, point.Y + dy], $"({point.X}, {point.Y})"));
     }
 
     [Fact]
