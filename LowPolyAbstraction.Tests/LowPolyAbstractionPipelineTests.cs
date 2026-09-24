@@ -334,6 +334,32 @@ public sealed class LowPolyAbstractionPipelineTests
         }
     }
 
+    [Theory]
+    [InlineData(192, 64, 64, 48, 40)]
+    [InlineData(192, 61, 70, 45, 37)]
+    [InlineData(192, 2, 3, 40, 41)]
+    [InlineData(192, 150, 149, 42, 43)]
+    [InlineData(190, 148, 147, 42, 43)]
+    public void TheVisibleBoundsHugTheShapeAndItsPaddingOnAFourPixelGrid(int canvas, int left, int top, int width, int height)
+    {
+        using var pipeline = CreatePipeline();
+        var padding = LowPolyAbstractionSettings.MarginPadding;
+        var parameters = Parameters(seed: 5);
+        using var source = GraphicsDevice.GetDefault().AllocateReadWriteTexture2D<Bgra32, Float4>(canvas, canvas);
+        Upload(source, TwoTone(canvas, canvas, left, top, width, height));
+
+        pipeline.Simulate(source, canvas, canvas, 0, 0, canvas, canvas, in parameters);
+
+        Assert.True(pipeline.TryGetVisibleBounds(canvas, canvas, in parameters, out var rect));
+        Assert.Equal((0, 0), (rect.X % 4, rect.Y % 4));
+        Assert.True(rect.Width % 4 == 0 || rect.X + rect.Width == canvas, $"{rect}");
+        Assert.True(rect.Height % 4 == 0 || rect.Y + rect.Height == canvas, $"{rect}");
+        Assert.InRange(rect.X, Math.Max(left - padding - 3, 0), Math.Max(left - padding, 0));
+        Assert.InRange(rect.Y, Math.Max(top - padding - 3, 0), Math.Max(top - padding, 0));
+        Assert.InRange(rect.X + rect.Width, Math.Min(left + width + padding, canvas), Math.Min(left + width + padding + 3, canvas));
+        Assert.InRange(rect.Y + rect.Height, Math.Min(top + height + padding, canvas), Math.Min(top + height + padding + 3, canvas));
+    }
+
     static LowPolyAbstractionPipeline.Parameters Changed(LowPolyAbstractionPipeline.Parameters parameters, string setting)
         => setting switch
         {
