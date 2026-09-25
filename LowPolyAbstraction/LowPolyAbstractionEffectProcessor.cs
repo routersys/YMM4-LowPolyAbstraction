@@ -142,7 +142,7 @@ internal sealed class LowPolyAbstractionEffectProcessor : VideoEffectProcessorBa
             itemHeight,
             in pipelineParameters);
 
-        if (!_pipeline.TryGetVisibleBounds(canvasWidth, canvasHeight, in pipelineParameters, out var rect))
+        if (!_pipeline.TryGetVisibleBounds(canvasWidth, canvasHeight, out var rect))
         {
             _effect.Amount = 0f;
             _parameters = parameters;

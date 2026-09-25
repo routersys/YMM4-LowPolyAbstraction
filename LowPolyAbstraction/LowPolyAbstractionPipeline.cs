@@ -168,7 +168,7 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
         return true;
     }
 
-    internal bool TryGetVisibleBounds(int canvasWidth, int canvasHeight, in Parameters parameters, out PixelRect rect)
+    internal bool TryGetVisibleBounds(int canvasWidth, int canvasHeight, out PixelRect rect)
     {
         rect = default;
         if (!_hasStructure || _cachedMinX > _cachedMaxX || _cachedMinY > _cachedMaxY)

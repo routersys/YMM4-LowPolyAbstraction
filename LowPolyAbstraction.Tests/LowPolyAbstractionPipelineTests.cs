@@ -580,7 +580,7 @@ public sealed class LowPolyAbstractionPipelineTests
         Upload(sourceTexture, source);
 
         pipeline.Simulate(sourceTexture, 192, 192, 0, 0, 192, 192, in parameters);
-        Assert.True(pipeline.TryGetVisibleBounds(192, 192, in parameters, out var rect));
+        Assert.True(pipeline.TryGetVisibleBounds(192, 192, out var rect));
         using var outputTexture = device.AllocateReadWriteTexture2D<Bgra32, Float4>(rect.Width, rect.Height);
         pipeline.RenderVisible(outputTexture, 192, 192, rect, in parameters);
         var visible = new Bgra32[rect.Width * rect.Height];
@@ -617,7 +617,7 @@ public sealed class LowPolyAbstractionPipelineTests
 
         pipeline.Simulate(source, canvas, canvas, 0, 0, canvas, canvas, in parameters);
 
-        Assert.True(pipeline.TryGetVisibleBounds(canvas, canvas, in parameters, out var rect));
+        Assert.True(pipeline.TryGetVisibleBounds(canvas, canvas, out var rect));
         Assert.Equal((0, 0), (rect.X % 4, rect.Y % 4));
         Assert.True(rect.Width % 4 == 0 || rect.X + rect.Width == canvas, $"{rect}");
         Assert.True(rect.Height % 4 == 0 || rect.Y + rect.Height == canvas, $"{rect}");
@@ -634,12 +634,12 @@ public sealed class LowPolyAbstractionPipelineTests
         var parameters = Parameters();
         using var source = UploadedSquare();
         pipeline.Simulate(source, 128, 128, 0, 0, 128, 128, in parameters);
-        Assert.True(pipeline.TryGetVisibleBounds(128, 128, in parameters, out _));
+        Assert.True(pipeline.TryGetVisibleBounds(128, 128, out _));
 
         Upload(source, new int[128 * 128]);
         pipeline.Simulate(source, 128, 128, 0, 0, 128, 128, in parameters);
 
-        Assert.False(pipeline.TryGetVisibleBounds(128, 128, in parameters, out var rect));
+        Assert.False(pipeline.TryGetVisibleBounds(128, 128, out var rect));
         Assert.Equal(default, rect);
     }
 

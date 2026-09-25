@@ -121,7 +121,7 @@ public sealed class LowPolyAbstractionInteropTests
         {
             interop.Draw(source.Bitmap);
             interop.Pipeline.Simulate(interop.Resources.GetSourceComputeBinding(), 96, 96, 0, 0, 96, 96, in parameters);
-            Assert.True(interop.Pipeline.TryGetVisibleBounds(96, 96, in parameters, out var visible));
+            Assert.True(interop.Pipeline.TryGetVisibleBounds(96, 96, out var visible));
             var (width, height) = outputSize(visible);
             Assert.True(interop.Resources.TryEnsureOutput(width, height, out _));
             interop.Pipeline.RenderVisible(interop.Resources.GetOutputComputeBinding(), 96, 96, visible, in parameters);
@@ -154,7 +154,7 @@ public sealed class LowPolyAbstractionInteropTests
             Assert.True(interop.Resources.TryEnsureSource(size, size, out var sourceChanged));
             interop.Draw(source.Bitmap);
             Assert.True(interop.Pipeline.Simulate(interop.Resources.GetSourceComputeBinding(), size, size, 0, 0, size, size, in parameters));
-            Assert.True(interop.Pipeline.TryGetVisibleBounds(size, size, in parameters, out var visible));
+            Assert.True(interop.Pipeline.TryGetVisibleBounds(size, size, out var visible));
             Assert.True(interop.Resources.TryEnsureOutput(visible.Width, visible.Height, out _));
             interop.Pipeline.RenderVisible(interop.Resources.GetOutputComputeBinding(), size, size, visible, in parameters);
             var output = interop.CaptureOutput(context, out var width, out var height);

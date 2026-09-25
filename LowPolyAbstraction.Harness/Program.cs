@@ -298,7 +298,7 @@ static int Structure(HarnessImage image)
         Console.WriteLine($"  {variants[index].Name,-11} min={sorted[0],7:F2}  median={median,7:F2}  max={sorted[^1],7:F2}");
     }
 
-    if (pipeline.TryGetVisibleBounds(image.Width, image.Height, in parameters, out var rect))
+    if (pipeline.TryGetVisibleBounds(image.Width, image.Height, out var rect))
     {
         using var rectOutput = device.AllocateReadWriteTexture2D<Bgra32, Float4>(rect.Width, rect.Height);
         pipeline.RenderVisible(rectOutput, image.Width, image.Height, rect, in parameters);
@@ -307,7 +307,7 @@ static int Structure(HarnessImage image)
         for (var frame = 0; frame < RectFrames; frame++)
         {
             pipeline.Simulate(sourceTexture, image.Width, image.Height, 0, 0, image.Width, image.Height, in parameters);
-            pipeline.TryGetVisibleBounds(image.Width, image.Height, in parameters, out rect);
+            pipeline.TryGetVisibleBounds(image.Width, image.Height, out rect);
             pipeline.RenderVisible(rectOutput, image.Width, image.Height, rect, in parameters);
         }
         pipeline.WaitForCompletion();
