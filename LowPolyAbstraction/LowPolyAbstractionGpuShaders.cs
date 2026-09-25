@@ -678,7 +678,7 @@ internal readonly partial struct JumpFloodSitePassShader(
                 if (sx < 0 || sx >= workingWidth || sy < 0 || sy >= workingHeight)
                     continue;
                 var candidate = input[sy * workingWidth + sx];
-                if (candidate < 0)
+                if (candidate < 0 || candidate == best)
                     continue;
                 var delta = position - sitePositions[candidate];
                 var distance = delta.X * delta.X + delta.Y * delta.Y;
