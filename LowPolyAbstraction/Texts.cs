@@ -1,10 +1,8 @@
 using YukkuriMovieMaker.Generator;
 
-namespace LowPolyAbstraction
-{
-    [AutoGenLocalizer]
-    partial class Texts
-    {
+namespace LowPolyAbstraction;
 
-    }
+[AutoGenLocalizer]
+partial class Texts
+{
 }
