@@ -317,8 +317,11 @@ internal sealed partial class LowPolyAbstractionPipelineHost
             RecordVoronoi(in context, grid, scratch, siteCapacity, in derived);
             context.For(accumulatorLength, new FillIntShader(grid.SiteAccumulators, accumulatorLength, 0));
             context.Barrier(grid.SiteAccumulators);
-            context.For(derived.WorkingWidth, derived.WorkingHeight, new CentroidAccumulateShader(
-                GetAssignment(grid, in derived), grid.Weight, grid.SiteAccumulators, derived.WorkingWidth, derived.WorkingHeight));
+            context.For(
+                ThreadGroupAlignment.AlignX<CentroidAccumulateShader>(derived.WorkingWidth),
+                ThreadGroupAlignment.AlignY<CentroidAccumulateShader>(derived.WorkingHeight),
+                new CentroidAccumulateShader(
+                    GetAssignment(grid, in derived), grid.Weight, grid.SiteAccumulators, derived.WorkingWidth, derived.WorkingHeight));
             context.Barrier(grid.SiteAccumulators);
             context.For(siteCapacity, new UpdateSitesShader(
                 grid.SitePositions, grid.SiteKinds, grid.SiteAccumulators, scratch,

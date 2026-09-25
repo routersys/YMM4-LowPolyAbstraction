@@ -693,7 +693,7 @@ internal readonly partial struct JumpFloodSitePassShader(
     }
 }
 
-[ThreadGroupSize(DefaultThreadGroupSizes.XY)]
+[ThreadGroupSize(LowPolyAbstractionSettings.AccumulateGroupDim, LowPolyAbstractionSettings.AccumulateGroupDim, 1)]
 [GeneratedComputeShaderDescriptor]
 internal readonly partial struct CentroidAccumulateShader(
     ReadWriteBuffer<int> assignment,
@@ -708,6 +708,18 @@ internal readonly partial struct CentroidAccumulateShader(
     private readonly int workingWidth = workingWidth;
     private readonly int workingHeight = workingHeight;
 
+    [GroupShared(LowPolyAbstractionSettings.AccumulateGroupSize)]
+    private static readonly int[] groupSite = null!;
+
+    [GroupShared(LowPolyAbstractionSettings.AccumulateGroupSize)]
+    private static readonly int[] groupWeight = null!;
+
+    [GroupShared(LowPolyAbstractionSettings.AccumulateGroupSize)]
+    private static readonly int[] groupWeightedX = null!;
+
+    [GroupShared(LowPolyAbstractionSettings.AccumulateGroupSize)]
+    private static readonly int[] groupWeightedY = null!;
+
     private void AddCarry(int index, int value)
     {
         int previous;
@@ -720,23 +732,51 @@ internal readonly partial struct CentroidAccumulateShader(
     {
         var x = ThreadIds.X;
         var y = ThreadIds.Y;
-        if (x >= workingWidth || y >= workingHeight)
-            return;
+        var slot = GroupIds.Index;
+        var site = -1;
+        var wq = 0;
+        var weightedX = 0;
+        var weightedY = 0;
+        if (x < workingWidth && y < workingHeight)
+        {
+            var index = y * workingWidth + x;
+            var assigned = assignment[index];
+            if (assigned >= 0)
+            {
+                wq = Hlsl.Max((int)(weight[index] * LowPolyAbstractionSettings.WeightScale + 0.5f), 0);
+                if (wq != 0)
+                {
+                    site = assigned;
+                    weightedX = wq * (x * LowPolyAbstractionSettings.PositionSubScale + LowPolyAbstractionSettings.PositionSubScale / 2);
+                    weightedY = wq * (y * LowPolyAbstractionSettings.PositionSubScale + LowPolyAbstractionSettings.PositionSubScale / 2);
+                }
+            }
+        }
+        groupSite[slot] = site;
+        groupWeight[slot] = wq;
+        groupWeightedX[slot] = weightedX;
+        groupWeightedY[slot] = weightedY;
+        Hlsl.GroupMemoryBarrierWithGroupSync();
 
-        var index = y * workingWidth + x;
-        var site = assignment[index];
         if (site < 0)
             return;
-        var w = weight[index];
-        var wq = Hlsl.Max((int)(w * LowPolyAbstractionSettings.WeightScale + 0.5f), 0);
-        if (wq == 0)
-            return;
-        var xq = x * LowPolyAbstractionSettings.PositionSubScale + LowPolyAbstractionSettings.PositionSubScale / 2;
-        var yq = y * LowPolyAbstractionSettings.PositionSubScale + LowPolyAbstractionSettings.PositionSubScale / 2;
+        for (var other = 0; other < slot; other++)
+        {
+            if (groupSite[other] == site)
+                return;
+        }
+        for (var other = slot + 1; other < LowPolyAbstractionSettings.AccumulateGroupSize; other++)
+        {
+            if (groupSite[other] != site)
+                continue;
+            wq += groupWeight[other];
+            weightedX += groupWeightedX[other];
+            weightedY += groupWeightedY[other];
+        }
         var baseIndex = site * 6;
         AddCarry(baseIndex, wq);
-        AddCarry(baseIndex + 2, wq * xq);
-        AddCarry(baseIndex + 4, wq * yq);
+        AddCarry(baseIndex + 2, weightedX);
+        AddCarry(baseIndex + 4, weightedY);
     }
 }
 
