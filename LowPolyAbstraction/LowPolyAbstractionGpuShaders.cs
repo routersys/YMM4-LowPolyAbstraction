@@ -1057,13 +1057,14 @@ internal readonly partial struct TriangleMapShader(
         for (var slot = 0; slot < listed; slot++)
         {
             var triangle = incidence[site * LowPolyAbstractionSettings.MaxIncidence + slot];
-            if (best >= 0 && triangle >= best)
-                continue;
             var a = sitePositions[triangleVertices[triangle * 3]];
             var b = sitePositions[triangleVertices[triangle * 3 + 1]];
             var c = sitePositions[triangleVertices[triangle * 3 + 2]];
             if (LowPolyAbstractionShaderMath.ContainsPoint(a, b, c, px, py))
+            {
                 best = triangle;
+                break;
+            }
         }
         triangleMap[index] = best;
     }
@@ -1443,19 +1444,16 @@ internal readonly partial struct RenderShader(
     private int FindTriangle(float px, float py, int site)
     {
         var listed = Hlsl.Min(incidenceCounts[site], LowPolyAbstractionSettings.MaxIncidence);
-        var best = -1;
         for (var slot = 0; slot < listed; slot++)
         {
             var triangle = incidence[site * LowPolyAbstractionSettings.MaxIncidence + slot];
-            if (best >= 0 && triangle >= best)
-                continue;
             var a = sitePositions[triangleVertices[triangle * 3]];
             var b = sitePositions[triangleVertices[triangle * 3 + 1]];
             var c = sitePositions[triangleVertices[triangle * 3 + 2]];
             if (LowPolyAbstractionShaderMath.ContainsPoint(a, b, c, px, py))
-                best = triangle;
+                return triangle;
         }
-        return best;
+        return -1;
     }
 
     private float SourceAlpha(float x, float y)
