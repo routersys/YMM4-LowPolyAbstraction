@@ -200,7 +200,7 @@ internal readonly partial struct EdgeDistanceSeedShader(
     }
 }
 
-[ThreadGroupSize(DefaultThreadGroupSizes.XY)]
+[ThreadGroupSize(LowPolyAbstractionSettings.JumpFloodGroupWidth, 1, 1)]
 [GeneratedComputeShaderDescriptor]
 internal readonly partial struct JumpFloodPixelPassShader(
     ReadWriteBuffer<int> input,
@@ -642,7 +642,7 @@ internal readonly partial struct VoronoiScatterShader(
     }
 }
 
-[ThreadGroupSize(DefaultThreadGroupSizes.XY)]
+[ThreadGroupSize(LowPolyAbstractionSettings.JumpFloodGroupWidth, 1, 1)]
 [GeneratedComputeShaderDescriptor]
 internal readonly partial struct JumpFloodSitePassShader(
     ReadWriteBuffer<int> input,

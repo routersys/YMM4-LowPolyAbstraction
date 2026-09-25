@@ -18,6 +18,7 @@ internal static class LowPolyAbstractionSettings
     public const int ScratchAlphaCount = 9;
     public const int ScratchPendingCount = 10;
     public const int ScanBlockSize = 1024;
+    public const int JumpFloodGroupWidth = 64;
     public const float AlphaThreshold = 0.05f;
     public const float EdgeThreshold = 0.06f;
     public const float EdgeSampleSpacingFactor = 0.02f;
