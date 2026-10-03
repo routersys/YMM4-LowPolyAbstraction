@@ -266,14 +266,16 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
 
     private void EnsureGrid(int workingWidth, int workingHeight, int siteCapacity)
     {
-        if (_workingWidth == workingWidth && _workingHeight == workingHeight && _siteCapacity == siteCapacity)
-            return;
+        var resized = _workingWidth != workingWidth || _workingHeight != workingHeight || _siteCapacity != siteCapacity;
+        if (resized)
+        {
+            _structureKey = null;
+            _hasStructure = false;
+            _workingWidth = 0;
+            _workingHeight = 0;
+            _siteCapacity = 0;
+        }
 
-        _structureKey = null;
-        _hasStructure = false;
-        _workingWidth = 0;
-        _workingHeight = 0;
-        _siteCapacity = 0;
         var pixelCount = workingWidth * workingHeight;
         var triangleCapacity = LowPolyAbstractionSettings.GetTriangleCapacity(siteCapacity);
         var scanLength = Math.Max((workingWidth + 1) * (workingHeight + 1), triangleCapacity);
@@ -301,8 +303,14 @@ internal sealed class LowPolyAbstractionPipeline : IDisposable
                     triangleErrorsLength: triangleCapacity,
                     triangleVerticesLength: triangleCapacity * 3,
                     weightLength: pixelCount),
-                out _))
+                out var changed))
             throw new InvalidOperationException();
+
+        if (changed)
+        {
+            _structureKey = null;
+            _hasStructure = false;
+        }
         _workingWidth = workingWidth;
         _workingHeight = workingHeight;
         _siteCapacity = siteCapacity;
