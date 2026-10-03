@@ -499,6 +499,22 @@ public sealed class LowPolyAbstractionPipelineTests
     }
 
     [Fact]
+    public void APipelineWhoseGridWasReclaimedDrawsLikeAFreshOne()
+    {
+        using var pipeline = CreatePipeline();
+        using var fresh = CreatePipeline();
+        var source = TwoTone(64, 64, 16, 16, 32, 32);
+        var parameters = Parameters();
+        Render(pipeline, source, 64, 64, parameters);
+        GraphicsDevice.GetDefault().TrimMemory();
+
+        var reused = Render(pipeline, source, 64, 64, parameters);
+        var expected = Render(fresh, source, 64, 64, parameters);
+
+        Assert.Equal(expected, reused);
+    }
+
+    [Fact]
     public void AWarmPipelineAllocatesNoManagedMemory()
     {
         using var pipeline = CreatePipeline();
